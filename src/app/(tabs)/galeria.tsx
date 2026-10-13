@@ -1,52 +1,38 @@
-import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useCallback } from 'react';
-import { FlatList, View } from 'react-native';
 
-import { AppText } from '@/components/ui/app-text';
+import { ClienteOnly } from '@/components/features/cliente-gate';
+import { GaleriaInspiracoes } from '@/components/features/galeria-inspiracoes';
 import { Screen } from '@/components/ui/screen';
-import { colors } from '@/constants/theme';
-import { portfolio } from '@/data/seed';
-import { formatBRL } from '@/lib/finance';
-import type { PortfolioPiece } from '@/types';
+import { useUiStore } from '@/hooks/use-ui-store';
 
+/**
+ * Tela da Galeria de Inspirações (port de `app/dashboard/galeria/galeria-client.tsx`).
+ *
+ * Guard: exclusiva do CLIENTE (`requireDashboardPerfil('cliente')`). Ao iniciar
+ * uma conversa, entrega a intenção ao chat via store e navega para a aba de
+ * chat com `{ artistId, artworkId }`, exatamente como o web fazia com a query.
+ */
 export default function GaleriaScreen() {
-  const renderItem = useCallback(
-    ({ item }: { item: PortfolioPiece }) => (
-      <View className="mb-3 flex-1 gap-2 rounded-2xl border border-line bg-card p-3">
-        <View className="aspect-square items-center justify-center rounded-xl bg-accent-glow">
-          <Ionicons name="brush" size={28} color={colors.accent} />
-        </View>
-        <AppText variant="body" numberOfLines={1}>
-          {item.title}
-        </AppText>
-        <View className="flex-row items-center justify-between">
-          <AppText variant="muted" className="text-xs">
-            {item.style}
-          </AppText>
-          <AppText variant="body" className="text-sm text-accent">
-            {formatBRL(item.priceCents)}
-          </AppText>
-        </View>
-      </View>
-    ),
-    [],
+  const setActiveTab = useUiStore((state) => state.setActiveTab);
+  const setPendingChatPeer = useUiStore((state) => state.setPendingChatPeer);
+  const setPendingChatArtwork = useUiStore((state) => state.setPendingChatArtwork);
+
+  const handleStartConversation = useCallback(
+    (tatuadorId: string, artworkId: string) => {
+      setPendingChatPeer(tatuadorId);
+      setPendingChatArtwork(artworkId);
+      setActiveTab('chat');
+      router.push({ pathname: '/chat', params: { artistId: tatuadorId, artworkId } });
+    },
+    [setActiveTab, setPendingChatArtwork, setPendingChatPeer],
   );
 
   return (
-    <Screen padded={false}>
-      <View className="px-5 pt-2">
-        <AppText variant="title">Galeria</AppText>
-        <AppText variant="muted">Trabalhos disponíveis para agendamento</AppText>
-      </View>
-      <FlatList
-        data={portfolio}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        numColumns={2}
-        columnWrapperStyle={{ gap: 12, paddingHorizontal: 20 }}
-        contentContainerStyle={{ paddingTop: 16, paddingBottom: 40 }}
-        showsVerticalScrollIndicator={false}
-      />
-    </Screen>
+    <ClienteOnly>
+      <Screen padded={false}>
+        <GaleriaInspiracoes onStartConversation={handleStartConversation} />
+      </Screen>
+    </ClienteOnly>
   );
 }
