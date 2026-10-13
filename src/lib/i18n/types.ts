@@ -1,0 +1,73 @@
+import type { Locale } from './locales';
+
+/**
+ * Known UI + domain message keys. The `(string & {})` branch keeps literal
+ * autocomplete while still allowing the dynamic `portfolio.*.<enum>` keys that
+ * are resolved at runtime by `portfolioLabelResolver`.
+ */
+export type KnownMessageKey =
+  | 'gallery.title'
+  | 'gallery.subtitle'
+  | 'gallery.explore'
+  | 'gallery.style'
+  | 'gallery.bodyPart'
+  | 'gallery.healing'
+  | 'gallery.all'
+  | 'gallery.allStyles'
+  | 'gallery.allParts'
+  | 'gallery.allHealing'
+  | 'gallery.fresh'
+  | 'gallery.healed'
+  | 'gallery.closeFilter'
+  | 'gallery.clearFilters'
+  | 'gallery.loadError'
+  | 'gallery.loadErrorHint'
+  | 'gallery.emptyFiltered'
+  | 'gallery.empty'
+  | 'gallery.emptyFilteredHint'
+  | 'gallery.emptyHint'
+  | 'welcome.artistFallback'
+  | 'studio.fallback'
+  | 'vitrine.independent'
+  | 'chat.openVitrine'
+  | 'galeria.startConversation'
+  | 'aria.like'
+  | 'aria.unlike'
+  | 'portfolio.style.fineLine'
+  | 'portfolio.style.realismo'
+  | 'portfolio.style.oldSchool'
+  | 'portfolio.style.blackwork'
+  | 'portfolio.style.minimalista'
+  | 'portfolio.style.oriental'
+  | 'portfolio.style.geometrico'
+  | 'portfolio.style.aquarela'
+  | 'portfolio.style.lettering'
+  | 'portfolio.style.neoTradicional'
+  | 'portfolio.body.braco'
+  | 'portfolio.body.antebraco'
+  | 'portfolio.body.ombro'
+  | 'portfolio.body.peito'
+  | 'portfolio.body.costas'
+  | 'portfolio.body.costela'
+  | 'portfolio.body.perna'
+  | 'portfolio.body.coxa'
+  | 'portfolio.body.panturrilha'
+  | 'portfolio.body.pulso'
+  | 'portfolio.body.mao'
+  | 'portfolio.body.pescoco'
+  | 'portfolio.duration.ate1h'
+  | 'portfolio.duration.h1to2'
+  | 'portfolio.duration.h2to4'
+  | 'portfolio.duration.h4to6'
+  | 'portfolio.duration.fullDay'
+  | 'portfolio.duration.multiSession'
+  | 'portfolio.healing.healed'
+  | 'portfolio.healing.fresh';
+
+export type MessageKey = KnownMessageKey | (string & {});
+
+export type Messages = Record<string, string>;
+
+export type Translations = Record<Locale, Messages>;
+
+export type Translate = (key: MessageKey, vars?: Record<string, string | number>) => string;

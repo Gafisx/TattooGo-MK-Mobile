@@ -1,3 +1,5 @@
+import { i18nStore } from './i18n/store';
+import { offlineQueue } from './offline-queue';
 import {
   migrateLegacyWebStorage,
   preferences,
@@ -39,6 +41,12 @@ export async function bootstrapApp(options: BootstrapOptions = {}): Promise<Boot
     if (options.legacy) {
       await migrateLegacyWebStorage(options.legacy);
     }
+
+    // Hydrate i18n *after* the legacy migration so a migrated locale wins.
+    await i18nStore.hydrate();
+
+    // Restore any likes queued while offline and start draining on reconnect.
+    await offlineQueue.hydrate();
   } catch {
     // Boot must never dead-end on storage errors; fall back to defaults.
   }

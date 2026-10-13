@@ -1,0 +1,120 @@
+{
+  "feature": "galeria-inspiracoes",
+  "profile": "cliente",
+  "source": "tattoogo-mk-web",
+  "target": "expo-react-native",
+  "screens": [
+    {
+      "id": "galeria.inspiracoes",
+      "name": "Galeria de Inspirações",
+      "route": "app/dashboard/galeria",
+      "guard": "requireDashboardPerfil('cliente')",
+      "components": ["galeria-inspiracoes", "galeria-card", "portfolio-filter-bar"],
+      "hooks": ["use-galeria"],
+      "endpoints": ["GET /api/galeria", "POST /api/portfolio/like/:id"],
+      "status": "todo"
+    }
+  ],
+  "i18n": {
+    "uiKeys": [
+      "gallery.title",
+      "gallery.subtitle",
+      "gallery.explore",
+      "gallery.style",
+      "gallery.bodyPart",
+      "gallery.healing",
+      "gallery.all",
+      "gallery.allStyles",
+      "gallery.allParts",
+      "gallery.allHealing",
+      "gallery.fresh",
+      "gallery.healed",
+      "gallery.closeFilter",
+      "gallery.clearFilters",
+      "gallery.loadError",
+      "gallery.loadErrorHint",
+      "gallery.emptyFiltered",
+      "gallery.empty",
+      "gallery.emptyFilteredHint",
+      "gallery.emptyHint"
+    ],
+    "domainKeyPrefixes": [
+      "portfolio.style.",
+      "portfolio.body.",
+      "portfolio.duration.",
+      "portfolio.healing."
+    ],
+    "locales": [
+      "pt-BR",
+      "pt-PT",
+      "en",
+      "es",
+      "fr",
+      "de",
+      "it",
+      "ja",
+      "zh",
+      "ko",
+      "ar",
+      "ru",
+      "hi",
+      "nl",
+      "tr",
+      "pl"
+    ],
+    "defaultLocale": "pt-BR",
+    "fallbackLocale": "en"
+  },
+  "endpointContract": {
+    "get_galeria": {
+      "method": "GET",
+      "path": "/api/galeria",
+      "params": ["style|estilo", "bodyPart|body_part", "healed|isHealed|is_healed|status|healing", "limit"],
+      "limitDefault": 48,
+      "limitMax": 60,
+      "filter": "tatuador.role=tatuador && kyc_status=aprovado && statusConta=ATIVO && deleted_at=null",
+      "response": "{ sucesso: boolean, items: GaleriaItem[] }"
+    },
+    "like": {
+      "method": "POST",
+      "path": "/api/portfolio/like/:id",
+      "response": "{ likes_count: number }",
+      "offlineQueue": "useOfflineQueue.enqueue('like', { id })"
+    }
+  },
+  "blockers": [
+    {
+      "id": "agendamento-get",
+      "desc": "agendamentoService.getAgendamentos() retorna [] (sem GET real)",
+      "severity": "high"
+    },
+    {
+      "id": "finance-split",
+      "desc": "lib/finance.ts 90/9/1 (solo) e 88/8/3/1 (estudio) vs payment-engine.ts hardcoded 88/8/3/1",
+      "severity": "high"
+    },
+    {
+      "id": "mocks-studio",
+      "desc": "MOCK_STUDIO_ACTIVE_SESSIONS / MOCK_STUDIO_FINANCIAL_LEDGER ainda em uso",
+      "severity": "medium"
+    }
+  ],
+  "fileRefs": {
+    "container": "components/features/galeria-inspiracoes.tsx",
+    "card": "components/features/galeria-card.tsx",
+    "filters": "components/features/portfolio-filter-bar.tsx",
+    "hook": "hooks/use-galeria.ts",
+    "types": "lib/types/galeria.ts",
+    "domainLabels": "lib/portfolio-metadata.ts",
+    "route": "app/dashboard/galeria/page.tsx",
+    "wrapper": "app/dashboard/galeria/galeria-client.tsx",
+    "apiRoute": "app/api/galeria/route.ts",
+    "service": "lib/services/galeria.ts",
+    "homeFeed": "components/features/home-discover.tsx",
+    "i18n": ["lib/i18n/types.ts", "lib/i18n/coverage.ts", "lib/i18n/index.ts", "lib/i18n/store.ts", "lib/i18n/locales.ts"],
+    "auth": ["lib/utils/auth-redirect.ts", "lib/utils/dashboard-gate.ts", "lib/services/perfil-session.ts"],
+    "kyc": ["app/dashboard/tatuador/layout.tsx", "components/features/tatuador-kyc-block.tsx"],
+    "finance": ["lib/finance.ts", "lib/services/payment-engine.ts", "lib/services/booking-transaction.ts"],
+    "mocks": ["lib/mocks/studio-active-sessions.ts", "lib/mocks/studio-financial-ledger.ts"]
+  }
+}
