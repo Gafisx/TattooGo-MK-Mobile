@@ -2,6 +2,7 @@ import { agendaTranslations } from './agenda-translations';
 import { kycTranslations } from './kyc-translations';
 import { paymentTranslations } from './payment-translations';
 import { studioCurationTranslations, studioTranslations } from './studio-translations';
+import { studioPaymentsTranslations } from './studio-payments-translations';
 import type { Locale } from './locales';
 import type { Messages, Translations } from './types';
 
@@ -970,5 +971,6 @@ export function getMessages(locale: Locale): Messages {
     ...kycTranslations[locale],
     ...studioTranslations[locale],
     ...studioCurationTranslations[locale],
+    ...studioPaymentsTranslations[locale],
   };
 }

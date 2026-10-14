@@ -7,6 +7,7 @@ import {
   TrackerEmptyState,
 } from '@/components/features/client-timeline-tracker';
 import { StudioAgendaView } from '@/components/features/studio-agenda-view';
+import { StudioPaymentsPanel } from '@/components/features/studio-payments-panel';
 import { AppText } from '@/components/ui/app-text';
 import { GlassContainer } from '@/components/ui/glass-container';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -104,7 +105,8 @@ export interface AgendaPaymentsWorkspaceProps {
  * `AgendaPaymentsWorkspace`). Gerencia o seletor segmentado
  * (Agendamentos | Pagamentos) e delega cada item ao rastreador de timeline.
  *
- * Para perfis de tatuador/estúdio, delega para a `StudioAgendaView`.
+ * Para perfis de tatuador/estúdio, o seletor alterna entre a `StudioAgendaView`
+ * (aba Agendamentos) e o `StudioPaymentsPanel` (aba Pagamentos).
  */
 export function AgendaPaymentsWorkspace({
   onStartBooking,
@@ -130,12 +132,23 @@ export function AgendaPaymentsWorkspace({
 
   if (isStudioRole(role)) {
     return (
-      <StudioAgendaView
-        agendamentos={agendamentos}
-        isLoading={isLoading}
-        isError={isError}
-        onRetry={refetch}
-      />
+      <View className="flex-1">
+        <View className="px-5 pt-3">
+          <SegmentedControl tab={tab} onChange={handleTabChange} />
+        </View>
+        <View className="flex-1">
+          {tab === 'payments' ? (
+            <StudioPaymentsPanel role={role} />
+          ) : (
+            <StudioAgendaView
+              agendamentos={agendamentos}
+              isLoading={isLoading}
+              isError={isError}
+              onRetry={refetch}
+            />
+          )}
+        </View>
+      </View>
     );
   }
 
