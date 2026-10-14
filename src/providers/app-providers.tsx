@@ -1,13 +1,13 @@
 import { ClerkProvider } from '@clerk/clerk-expo';
 import type { ReactNode } from 'react';
 
+import { clerkPublishableKey, isAuthConfigured } from '@/lib/env';
 import { tokenCache } from '@/lib/clerk-token-cache';
 import { QueryProvider } from '@/providers/query-provider';
 
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
-
-/** Whether native Clerk auth is configured for this build. */
-export const isAuthConfigured = Boolean(publishableKey);
+// Re-exported from the env module so existing consumers keep a single import
+// path (`@/providers/app-providers`) for the auth-configured flag.
+export { isAuthConfigured };
 
 interface AppProvidersProps {
   children: ReactNode;
@@ -19,8 +19,8 @@ interface AppProvidersProps {
  * React Query is always mounted so data screens work with or without auth.
  */
 export function AppProviders({ children }: AppProvidersProps) {
-  const content = publishableKey ? (
-    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+  const content = clerkPublishableKey ? (
+    <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}>
       {children}
     </ClerkProvider>
   ) : (

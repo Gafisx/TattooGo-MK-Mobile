@@ -1,3 +1,4 @@
+import { reportPublicEnv } from './env';
 import { i18nStore } from './i18n/store';
 import { offlineQueue } from './offline-queue';
 import {
@@ -27,6 +28,9 @@ export interface BootstrapOptions {
  * only ever sees one clean transition (no hydration flicker, no empty canvas).
  */
 export async function bootstrapApp(options: BootstrapOptions = {}): Promise<BootstrapResult> {
+  // Fail fast (and loud) on invalid public config before any network call.
+  reportPublicEnv();
+
   let theme: ThemePreference = DEFAULT_THEME;
   let locale: LocalePreference = DEFAULT_LOCALE;
 

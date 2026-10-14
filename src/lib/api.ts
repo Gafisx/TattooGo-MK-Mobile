@@ -1,7 +1,7 @@
-import { authToken } from './storage';
+import { getAuthToken } from './auth/token';
+import { apiBaseUrl } from './env';
 
-export const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL ?? 'https://api.tattoogomk.com.br';
+export const API_BASE_URL = apiBaseUrl;
 
 const DEFAULT_TIMEOUT_MS = 20000;
 
@@ -37,7 +37,9 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   };
 
   if (auth) {
-    const token = await authToken.get();
+    // Native auth is Clerk-only: the active session token is injected as a
+    // Bearer header. No web cookies / credentials are ever sent.
+    const token = await getAuthToken();
     if (token) finalHeaders.Authorization = `Bearer ${token}`;
   }
 
