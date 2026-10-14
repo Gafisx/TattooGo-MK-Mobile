@@ -47,7 +47,12 @@ export function AuthOtpPanel({
     <View className="flex-1">
       {/* Máquina de tatuagem 3D: reage ao estado do código OTP (idle/buzzing/error/success). */}
       <View className="h-64 w-full overflow-hidden rounded-3xl border border-line bg-surface/60">
-        <TattooMachine3D status={state} style={{ flex: 1 }} />
+        <TattooMachine3D
+          status={state}
+          currentDigit={code.length > 0 ? code[code.length - 1] : undefined}
+          drawKey={code.length}
+          style={{ flex: 1 }}
+        />
       </View>
 
       <View className="mt-8 gap-2">
