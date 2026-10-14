@@ -15,6 +15,15 @@ import {
 /**
  * Modelo 3D da máquina de tatuagem (Dark Luxury). O ficheiro `.glb` é carregado
  * pelo Metro através do `require`, resolvido no runtime nativo por `expo-asset`.
+ *
+ * Compressão: o asset `tattoo-machine.glb` é otimizado em build-time por
+ * `npm run model:optimize` (ver `scripts/optimize-model.mjs`) — texturas/UVs
+ * removidas (o material é substituído em runtime) e geometria quantizada com
+ * `KHR_mesh_quantization` (~21 MB -> ~2.3 MB). NÃO se usa Draco/Meshopt em
+ * runtime porque os seus decodificadores dependem de WebAssembly + Web Workers,
+ * que não existem no Hermes/React Native: um asset comprimido com Draco falharia
+ * ao descodificar em dispositivo. `KHR_mesh_quantization` é lido nativamente
+ * pelo `GLTFLoader`.
  */
 const MODEL_SOURCE = require('../../../assets/models/tattoo-machine.glb') as unknown as string;
 
@@ -70,6 +79,10 @@ function useStyledModel(): StyledModel {
   const { scene } = useGLTF(MODEL_SOURCE);
 
   return useMemo(() => {
+    // `clone(true)` reuses the cached geometries (shared by reference with the
+    // `useGLTF` scene), so only the per-instance materials created below are
+    // owned by this component and must be disposed. Disposing the shared
+    // geometries here would corrupt the loader cache and break `preload`.
     const root = scene.clone(true);
     const chassis = new THREE.MeshStandardMaterial({
       color: CHASSIS_COLOR,

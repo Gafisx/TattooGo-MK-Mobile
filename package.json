@@ -53,6 +53,7 @@
   },
   "devDependencies": {
     "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/extensions": "^4.5.1",
     "@gltf-transform/functions": "^4.5.1",
     "@types/react": "~19.2.2",
     "eslint": "^9.39.5",
@@ -66,7 +67,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "model:optimize": "node scripts/optimize-model.mjs"
   },
   "private": true
 }
