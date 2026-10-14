@@ -31,6 +31,12 @@ function ClerkAuthGate({ children }: { children: ReactNode }) {
 
   const isLoaded = authLoaded && userLoaded;
 
+  // TODO(role-router): substituir esta reconciliação por um Role Router dedicado.
+  // A cascata final será: unauthenticated -> /login; sem role -> /onboarding;
+  // role=tatuador com KYC != 'aprovado' -> /kyc-pendente; role=estudio -> /estudio;
+  // caso contrário -> / (dashboard por perfil). Hoje o gate cobre apenas o
+  // primeiro e o segundo degraus; os restantes vivem nos gates especializados
+  // (`TatuadorKycGate`, `ClienteOnly`) e no layout de `/estudio`.
   const publicMetadata = (user?.publicMetadata ?? {}) as Record<string, unknown>;
   const unsafeMetadata = (user?.unsafeMetadata ?? {}) as Record<string, unknown>;
   const role = parseAppRole(publicMetadata.role) ?? parseAppRole(unsafeMetadata.role);

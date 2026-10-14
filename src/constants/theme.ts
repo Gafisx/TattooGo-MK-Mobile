@@ -16,6 +16,8 @@ export const colors = {
   ink: '#fafafa',
   subtle: '#a1a1aa',
   muted: '#71717a',
+  /** Neutral gray for inactive tab icons/labels (Dark Luxury bottom bar). */
+  tabInactive: '#6B7280',
   accent: '#F97316',
   accentSoft: '#FB923C',
   accentStrong: '#EA580C',

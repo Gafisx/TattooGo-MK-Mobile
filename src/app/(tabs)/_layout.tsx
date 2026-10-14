@@ -16,11 +16,13 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
+        // Dark Luxury bottom bar: matte #121212 surface, orange neon when
+        // active, neutral gray when idle. No top header on any tab.
         headerShown: false,
         tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.muted,
+        tabBarInactiveTintColor: colors.tabInactive,
         tabBarStyle: {
-          backgroundColor: colors.canvas,
+          backgroundColor: colors.surface,
           borderTopColor: colors.line,
           borderTopWidth: StyleSheet.hairlineWidth,
           paddingTop: 6,
