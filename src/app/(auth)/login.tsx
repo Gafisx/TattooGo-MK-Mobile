@@ -10,7 +10,6 @@ import { AuthDevNotice } from '@/components/features/auth-dev-notice';
 import { AuthOtpPanel } from '@/components/features/auth-otp-panel';
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
-import type { OTPState } from '@/components/ui/otp-input';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { colors } from '@/constants/theme';
@@ -39,11 +38,7 @@ function ClerkLoginScreen() {
 
   const [factor, setFactor] = useState<PreparedFactor | null>(null);
   const [step, setStep] = useState<'form' | 'otp'>('form');
-  const [code, setCode] = useState('');
-  const [otpState, setOtpState] = useState<OTPState>('idle');
-  const [otpError, setOtpError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -58,9 +53,6 @@ function ClerkLoginScreen() {
 
   const beginOtp = (next: PreparedFactor) => {
     setFactor(next);
-    setCode('');
-    setOtpState('idle');
-    setOtpError(null);
     setStep('otp');
   };
 
@@ -112,79 +104,6 @@ function ClerkLoginScreen() {
     }
   });
 
-  const handleVerify = async () => {
-    if (!isLoaded || !signIn || !setActive) return;
-    if (!factor) return;
-
-    setSubmitting(true);
-    setOtpError(null);
-    setOtpState('idle');
-
-    try {
-      const result =
-        factor.stage === 'second'
-          ? await signIn.attemptSecondFactor({ strategy: 'email_code', code })
-          : await signIn.attemptFirstFactor({ strategy: 'email_code', code });
-
-      if (result.status === 'complete' && result.createdSessionId) {
-        setOtpState('success');
-        await setActive({ session: result.createdSessionId });
-        router.replace('/');
-        return;
-      }
-
-      if (result.status === 'needs_second_factor') {
-        const secondFactor = result.supportedSecondFactors?.find(
-          (candidate) => candidate.strategy === 'email_code',
-        );
-        if (secondFactor && 'emailAddressId' in secondFactor) {
-          await signIn.prepareSecondFactor({
-            strategy: 'email_code',
-            emailAddressId: secondFactor.emailAddressId,
-          });
-          beginOtp({ stage: 'second', emailAddressId: secondFactor.emailAddressId });
-          return;
-        }
-      }
-
-      setOtpState('error');
-      setOtpError('Código incorreto. Tente novamente.');
-    } catch (error) {
-      setOtpState('error');
-      setOtpError(clerkErrorMessage(error));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleResend = async () => {
-    if (!isLoaded || !signIn) return;
-    if (!factor) return;
-
-    setSubmitting(true);
-    setOtpError(null);
-
-    try {
-      if (factor.stage === 'second') {
-        await signIn.prepareSecondFactor({
-          strategy: 'email_code',
-          emailAddressId: factor.emailAddressId,
-        });
-      } else {
-        await signIn.prepareFirstFactor({
-          strategy: 'email_code',
-          emailAddressId: factor.emailAddressId,
-        });
-      }
-      setCode('');
-      setOtpState('idle');
-    } catch (error) {
-      setOtpError(clerkErrorMessage(error));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   if (!isLoaded) {
     return (
       <Screen>
@@ -199,20 +118,12 @@ function ClerkLoginScreen() {
     return (
       <Screen>
         <AuthOtpPanel
+          mode="signIn"
           title="Verificação em dois passos"
           subtitle={`Introduza o código enviado para ${getValues('email')}.`}
-          code={code}
-          onChangeCode={(value) => {
-            setCode(value);
-            if (otpState !== 'idle') setOtpState('idle');
-            if (otpError) setOtpError(null);
-          }}
-          state={otpState}
-          errorMessage={otpError ?? undefined}
-          submitting={submitting}
+          factorStage={factor?.stage}
+          emailAddressId={factor?.emailAddressId}
           verifyLabel="Confirmar código"
-          onVerify={handleVerify}
-          onResend={handleResend}
           onBack={() => setStep('form')}
         />
       </Screen>

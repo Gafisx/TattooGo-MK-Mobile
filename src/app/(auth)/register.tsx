@@ -11,7 +11,6 @@ import { AuthOtpPanel } from '@/components/features/auth-otp-panel';
 import { RoleSelector } from '@/components/features/role-selector';
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
-import type { OTPState } from '@/components/ui/otp-input';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { colors } from '@/constants/theme';
@@ -35,15 +34,11 @@ function initialKycStatus(role: AppRole): 'nao_aplicavel' | 'pendente' {
  */
 function ClerkRegisterScreen() {
   const { isLoaded: authLoaded, signOut } = useAuth();
-  const { isLoaded: signUpLoaded, signUp, setActive } = useSignUp();
+  const { isLoaded: signUpLoaded, signUp } = useSignUp();
   const isLoaded = authLoaded && signUpLoaded;
 
   const [step, setStep] = useState<'form' | 'otp'>('form');
-  const [code, setCode] = useState('');
-  const [otpState, setOtpState] = useState<OTPState>('idle');
-  const [otpError, setOtpError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -67,7 +62,7 @@ function ClerkRegisterScreen() {
   const role = useWatch({ control, name: 'role' }) ?? 'cliente';
 
   const onSubmit = handleSubmit(async (values) => {
-    if (!isLoaded || !signUp || !setActive) return;
+    if (!isLoaded || !signUp) return;
     setFormError(null);
 
     try {
@@ -93,58 +88,11 @@ function ClerkRegisterScreen() {
 
       await signUp.prepareVerification({ strategy: 'email_code' });
 
-      setCode('');
-      setOtpState('idle');
-      setOtpError(null);
       setStep('otp');
     } catch (error) {
       setFormError(clerkErrorMessage(error));
     }
   });
-
-  const handleVerify = async () => {
-    if (!isLoaded || !signUp || !setActive) return;
-    setSubmitting(true);
-    setOtpError(null);
-    setOtpState('idle');
-
-    try {
-      const result = await signUp.attemptVerification({ strategy: 'email_code', code });
-
-      if (result.status === 'complete' && result.createdSessionId) {
-        const createdRole = getValues('role');
-        setOtpState('success');
-        await setActive({ session: result.createdSessionId });
-        reconcileSession({ role: createdRole, kycStatus: initialKycStatus(createdRole) });
-        router.replace('/');
-        return;
-      }
-
-      setOtpState('error');
-      setOtpError('Não foi possível concluir o registo. Verifique o código e tente novamente.');
-    } catch (error) {
-      setOtpState('error');
-      setOtpError(clerkErrorMessage(error));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleResend = async () => {
-    if (!isLoaded || !signUp) return;
-    setSubmitting(true);
-    setOtpError(null);
-
-    try {
-      await signUp.prepareVerification({ strategy: 'email_code' });
-      setCode('');
-      setOtpState('idle');
-    } catch (error) {
-      setOtpError(clerkErrorMessage(error));
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   if (!isLoaded) {
     return (
@@ -160,20 +108,14 @@ function ClerkRegisterScreen() {
     return (
       <Screen>
         <AuthOtpPanel
+          mode="signUp"
           title="Confirme o seu e-mail"
           subtitle={`Enviámos um código de verificação para ${getValues('email')}.`}
-          code={code}
-          onChangeCode={(value) => {
-            setCode(value);
-            if (otpState !== 'idle') setOtpState('idle');
-            if (otpError) setOtpError(null);
-          }}
-          state={otpState}
-          errorMessage={otpError ?? undefined}
-          submitting={submitting}
           verifyLabel="Confirmar registo"
-          onVerify={handleVerify}
-          onResend={handleResend}
+          onAuthenticated={() => {
+            const createdRole = getValues('role');
+            reconcileSession({ role: createdRole, kycStatus: initialKycStatus(createdRole) });
+          }}
           onBack={() => setStep('form')}
         />
       </Screen>
