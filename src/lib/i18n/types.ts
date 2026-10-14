@@ -177,7 +177,21 @@ export type KnownMessageKey =
   | 'portfolio.upload.missingFields'
   | 'portfolio.upload.success'
   | 'portfolio.upload.retry'
-  | 'portfolio.upload.loader';
+  | 'portfolio.upload.loader'
+  | 'portfolio.upload.notes'
+  | 'portfolio.upload.notesPlaceholder'
+  | 'portfolio.upload.edit'
+  | 'portfolio.upload.editTitle'
+  | 'portfolio.upload.archive'
+  | 'portfolio.upload.save'
+  | 'portfolio.upload.saving'
+  | 'portfolio.upload.updateSuccess'
+  | 'portfolio.upload.updateError'
+  | 'portfolio.upload.archiveTitle'
+  | 'portfolio.upload.archiveDescription'
+  | 'portfolio.upload.archiveConfirm'
+  | 'portfolio.upload.archiveSuccess'
+  | 'portfolio.upload.archiveError';
 
 export type MessageKey = KnownMessageKey | (string & {});
 

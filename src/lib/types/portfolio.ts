@@ -24,6 +24,7 @@ export interface PortfolioWork {
   bodyPart: PortfolioBodyPart;
   sessionDuration: PortfolioSessionDuration;
   isHealed: boolean;
+  notes?: string | null;
   title?: string | null;
   createdAt?: string | null;
 }
@@ -35,12 +36,15 @@ export interface PresignRequest {
   fileSize: number;
 }
 
-/** Resposta de `POST /api/upload/presign`. */
+/**
+ * Resposta de `POST /api/upload/presign` (contrato web):
+ * `{ presignedUrl, publicUrl }`. `key` é opcional (compatibilidade), mas a
+ * `publicUrl` é obrigatória — é ela que vira a `imageUrl` do item no backend.
+ */
 export interface PresignResponse {
-  uploadUrl: string;
-  key: string;
-  /** URL pública final do objeto (quando o backend já a resolve). */
-  publicUrl?: string;
+  presignedUrl: string;
+  publicUrl: string;
+  key?: string;
 }
 
 /** Rascunho local do formulário nativo (imagem escolhida + tags). */
@@ -55,14 +59,23 @@ export interface PortfolioDraft {
   bodyPart: PortfolioBodyPart | null;
   sessionDuration: PortfolioSessionDuration | null;
   isHealed: boolean;
+  notes: string;
 }
 
-/** Payload persistido após o upload do binário para o storage. */
+/** Payload persistido após o upload do binário para o storage (`POST`). */
 export interface PortfolioCreateInput {
   imageUrl: string;
-  key?: string;
   style: PortfolioStyle;
   bodyPart: PortfolioBodyPart;
   sessionDuration: PortfolioSessionDuration;
   isHealed: boolean;
+  notes: string;
 }
+
+/**
+ * Payload de curadoria (`PATCH /api/tatuador/portfolio/:id`).
+ *
+ * Mesmo corpo do `POST`, incluindo `imageUrl`: a edição reenvia a imagem atual
+ * do item para manter a semântica de substituição total do endpoint.
+ */
+export type PortfolioUpdateInput = PortfolioCreateInput;

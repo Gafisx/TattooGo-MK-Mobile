@@ -6,6 +6,7 @@ import {
 } from '@/lib/portfolio-metadata';
 import type {
   PortfolioCreateInput,
+  PortfolioUpdateInput,
   PortfolioWork,
   PresignRequest,
   PresignResponse,
@@ -15,10 +16,12 @@ import type {
  * Portfólio do tatuador — camada de serviço nativa.
  *
  * Contratos (espelham o web):
- *  - `GET  /api/tatuador/portfolio`        -> `{ sucesso, items }`
- *  - `POST /api/upload/presign`            -> `{ uploadUrl, key, publicUrl? }`
- *  - `PUT  <uploadUrl>` (S3)               -> binário da imagem
- *  - `POST /api/tatuador/portfolio`        -> cria o item já com `imageUrl`
+ *  - `GET    /api/tatuador/portfolio`      -> `{ sucesso, items }`
+ *  - `POST   /api/tatuador/portfolio`      -> cria o item já com `imageUrl`
+ *  - `PATCH  /api/tatuador/portfolio/:id`  -> curadoria (mesmo corpo do POST)
+ *  - `DELETE /api/tatuador/portfolio/:id`  -> arquiva/exclui o item
+ *  - `POST   /api/upload/presign`          -> `{ presignedUrl, publicUrl }`
+ *  - `PUT    <presignedUrl>` (S3)          -> binário da imagem
  */
 
 export const portfolioKeys = {
@@ -74,6 +77,7 @@ export function parsePortfolioWork(value: unknown): PortfolioWork | null {
       asBoolean(record.isHealed) ||
       asBoolean(record.is_healed) ||
       asBoolean(record.healed),
+    notes: asString(record.notes) ?? asString(record.note),
     title: asString(record.title),
     createdAt: asString(record.createdAt) ?? asString(record.created_at),
   };
@@ -92,18 +96,22 @@ export async function fetchMyPortfolio(): Promise<PortfolioWork[]> {
   return Array.isArray(payload.items) ? payload.items.map(parsePortfolioWork).filter(isPresent) : [];
 }
 
-/** `POST /api/upload/presign` -> URL assinada + chave do objeto no storage. */
+/** `POST /api/upload/presign` -> URL assinada + URL pública do objeto. */
 export async function requestUploadPresign(input: PresignRequest): Promise<PresignResponse> {
   const payload = await api.post<Record<string, unknown>>('/api/upload/presign', input);
-  const uploadUrl = asString(payload.uploadUrl) ?? asString(payload.upload_url);
-  const key = asString(payload.key);
-  if (!uploadUrl || !key) {
+  const presignedUrl =
+    asString(payload.presignedUrl) ??
+    asString(payload.presigned_url) ??
+    asString(payload.uploadUrl) ??
+    asString(payload.upload_url);
+  const publicUrl = asString(payload.publicUrl) ?? asString(payload.public_url);
+  if (!presignedUrl || !publicUrl) {
     throw new ApiError('portfolio.upload.presignError', 500, payload);
   }
   return {
-    uploadUrl,
-    key,
-    publicUrl: asString(payload.publicUrl) ?? asString(payload.public_url) ?? undefined,
+    presignedUrl,
+    publicUrl,
+    key: asString(payload.key) ?? undefined,
   };
 }
 
@@ -114,14 +122,14 @@ export async function requestUploadPresign(input: PresignRequest): Promise<Presi
  * `fetch(uri)` e fazemos `PUT` direto no S3 com o `Content-Type` da mídia.
  */
 export async function uploadImageToStorage(
-  uploadUrl: string,
+  presignedUrl: string,
   uri: string,
   contentType: string,
 ): Promise<void> {
   const fileResponse = await fetch(uri);
   const blob = await fileResponse.blob();
 
-  const uploadResponse = await fetch(uploadUrl, {
+  const uploadResponse = await fetch(presignedUrl, {
     method: 'PUT',
     headers: { 'Content-Type': contentType },
     body: blob,
@@ -138,4 +146,21 @@ export async function createPortfolioWork(
 ): Promise<PortfolioWork | null> {
   const payload = await api.post<Record<string, unknown>>('/api/tatuador/portfolio', input);
   return parsePortfolioWork(payload.item ?? payload.work ?? payload);
+}
+
+/** `PATCH /api/tatuador/portfolio/:id` -> curadoria dos metadados do item. */
+export async function updatePortfolioWork(
+  id: string,
+  input: PortfolioUpdateInput,
+): Promise<PortfolioWork | null> {
+  const payload = await api.patch<Record<string, unknown>>(
+    `/api/tatuador/portfolio/${encodeURIComponent(id)}`,
+    input,
+  );
+  return parsePortfolioWork(payload.item ?? payload.work ?? payload);
+}
+
+/** `DELETE /api/tatuador/portfolio/:id` -> arquiva (remove) o item. */
+export async function archivePortfolioWork(id: string): Promise<void> {
+  await api.delete<unknown>(`/api/tatuador/portfolio/${encodeURIComponent(id)}`);
 }
