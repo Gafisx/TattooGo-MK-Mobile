@@ -2,6 +2,7 @@ import { View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
+import { TattooMachine3D } from '@/components/ui/tattoo-machine-3d';
 import { TattooOTPInput } from '@/components/ui/tattoo-otp';
 import type { OTPState } from '@/components/ui/otp-input';
 
@@ -44,11 +45,9 @@ export function AuthOtpPanel({
 }: AuthOtpPanelProps) {
   return (
     <View className="flex-1">
-      {/* TODO(3D): Inject 3D/Rive Tattoo Machine here */}
-      <View className="h-64 w-full items-center justify-center rounded-3xl border border-line bg-surface/60">
-        <AppText variant="muted" className="text-xs uppercase tracking-widest">
-          Máquina de tatuagem
-        </AppText>
+      {/* Máquina de tatuagem 3D: reage ao estado do código OTP (idle/buzzing/error/success). */}
+      <View className="h-64 w-full overflow-hidden rounded-3xl border border-line bg-surface/60">
+        <TattooMachine3D status={state} style={{ flex: 1 }} />
       </View>
 
       <View className="mt-8 gap-2">
