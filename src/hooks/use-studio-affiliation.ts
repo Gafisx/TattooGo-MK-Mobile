@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
 
 import { fetchStudioAffiliation, respondToAffiliation, studioKeys } from '@/lib/services/studio';
 import type { PedidoDecision, StudioAffiliation, StudioArtistRow } from '@/lib/types/studio';
@@ -43,6 +44,11 @@ export function useStudioAffiliation(): UseStudioAffiliationResult {
   const pedidos = query.data?.pedidos ?? [];
   const partners = query.data?.partners ?? [];
 
+  const respond = useCallback(
+    (pedidoId: string, decision: PedidoDecision) => mutation.mutateAsync({ pedidoId, decision }),
+    [mutation],
+  );
+
   return {
     pedidos,
     pending: pedidos.filter((pedido) => pedido.status === 'pendente'),
@@ -50,7 +56,7 @@ export function useStudioAffiliation(): UseStudioAffiliationResult {
     isLoading: query.isLoading,
     isError: query.isError,
     respondingId: mutation.isPending ? (mutation.variables?.pedidoId ?? null) : null,
-    respond: mutation.mutateAsync,
+    respond,
     refetch: () => void query.refetch(),
   };
 }

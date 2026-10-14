@@ -50,6 +50,12 @@ export default function PerfilScreen() {
           onPress={() => router.push('/tatuador')}
         />
         <ListRow
+          icon="business-outline"
+          title="Painel do estúdio"
+          subtitle="Equipe, CNPJ e agenda do estúdio"
+          onPress={() => router.push('/estudio')}
+        />
+        <ListRow
           icon="hourglass-outline"
           title="Verificação KYC"
           subtitle="Acompanhe o status"
