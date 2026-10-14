@@ -49,6 +49,7 @@ export default function TabsLayout() {
         options={{ title: 'Galeria', tabBarIcon: icon('grid-outline', 'grid') }}
       />
       <Tabs.Screen name="tatuador" options={{ href: null }} />
+      <Tabs.Screen name="estudio" options={{ href: null }} />
     </Tabs>
   );
 }

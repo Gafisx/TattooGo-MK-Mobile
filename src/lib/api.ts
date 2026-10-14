@@ -101,4 +101,10 @@ export const endpoints = {
     threads: () => '/api/chat/threads',
     messages: (threadId: string) => `/api/chat/threads/${threadId}/messages`,
   },
+  studios: {
+    validateCnpj: () => '/api/studios/validate-cnpj',
+    register: () => '/api/studios/register',
+    compliance: () => '/api/studios/compliance',
+    affiliation: () => '/api/studios/affiliation',
+  },
 } as const;

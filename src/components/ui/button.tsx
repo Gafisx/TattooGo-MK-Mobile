@@ -1,4 +1,5 @@
-import { ActivityIndicator, Pressable, Text, type PressableProps } from 'react-native';
+import type { ReactNode } from 'react';
+import { ActivityIndicator, Pressable, Text, View, type PressableProps } from 'react-native';
 
 type Variant = 'primary' | 'secondary' | 'ghost';
 
@@ -6,6 +7,8 @@ interface ButtonProps extends Omit<PressableProps, 'children'> {
   label: string;
   variant?: Variant;
   loading?: boolean;
+  /** Optional leading element (e.g. a lucide icon rendered by the caller). */
+  icon?: ReactNode;
 }
 
 const variantClass: Record<Variant, string> = {
@@ -27,6 +30,7 @@ export function Button({
   loading = false,
   disabled,
   className,
+  icon,
   ...props
 }: ButtonProps & { className?: string }) {
   const isDisabled = disabled || loading;
@@ -42,7 +46,10 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={variant === 'primary' ? '#0a0a0a' : '#fafafa'} />
       ) : (
-        <Text className={`text-base font-semibold ${labelClass[variant]}`}>{label}</Text>
+        <>
+          {icon ? <View className="mr-2">{icon}</View> : null}
+          <Text className={`text-base font-semibold ${labelClass[variant]}`}>{label}</Text>
+        </>
       )}
     </Pressable>
   );

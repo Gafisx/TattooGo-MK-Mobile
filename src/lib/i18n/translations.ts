@@ -1,6 +1,7 @@
 import { agendaTranslations } from './agenda-translations';
 import { kycTranslations } from './kyc-translations';
 import { paymentTranslations } from './payment-translations';
+import { studioDashboardTranslations, studioComplianceStatusTranslations } from './studio-dashboard-translations';
 import { studioCurationTranslations, studioTranslations } from './studio-translations';
 import { studioPaymentsTranslations } from './studio-payments-translations';
 import type { Locale } from './locales';
@@ -972,5 +973,7 @@ export function getMessages(locale: Locale): Messages {
     ...studioTranslations[locale],
     ...studioCurationTranslations[locale],
     ...studioPaymentsTranslations[locale],
+    ...studioDashboardTranslations[locale],
+    ...studioComplianceStatusTranslations[locale],
   };
 }
