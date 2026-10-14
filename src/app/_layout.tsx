@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { AuthGate } from '@/components/features/auth-gate';
 import { colors } from '@/constants/theme';
 import { bootstrapApp } from '@/lib/bootstrap';
 import { AppProviders } from '@/providers/app-providers';
@@ -65,18 +66,22 @@ export default function RootLayout() {
         <AppProviders>
           <ThemeProvider value={navTheme}>
             <StatusBar style="light" />
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: colors.canvas },
-                animation: 'fade',
-              }}>
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="chat/[threadId]" options={{ animation: 'slide_from_right' }} />
-              <Stack.Screen name="ai" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-              <Stack.Screen name="kyc-pendente" />
-              <Stack.Screen name="seja-tatuador" />
-            </Stack>
+            <AuthGate>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: colors.canvas },
+                  animation: 'fade',
+                }}>
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="onboarding" />
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="chat/[threadId]" options={{ animation: 'slide_from_right' }} />
+                <Stack.Screen name="ai" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+                <Stack.Screen name="kyc-pendente" />
+                <Stack.Screen name="seja-tatuador" />
+              </Stack>
+            </AuthGate>
           </ThemeProvider>
         </AppProviders>
       </SafeAreaProvider>
