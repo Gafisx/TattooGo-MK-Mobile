@@ -1,4 +1,5 @@
 import { agendaTranslations } from './agenda-translations';
+import { paymentTranslations } from './payment-translations';
 import type { Locale } from './locales';
 import type { Messages, Translations } from './types';
 
@@ -960,5 +961,5 @@ export const translations: Translations = {
 };
 
 export function getMessages(locale: Locale): Messages {
-  return { ...translations[locale], ...agendaTranslations[locale] };
+  return { ...translations[locale], ...agendaTranslations[locale], ...paymentTranslations[locale] };
 }

@@ -1,7 +1,7 @@
-import { Wallet } from 'lucide-react-native';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 
+import { PaymentsPanel } from '@/components/features/client-payments-panel';
 import {
   ClientTimelineTracker,
   TrackerEmptyState,
@@ -9,21 +9,11 @@ import {
 import { AppText } from '@/components/ui/app-text';
 import { GlassContainer } from '@/components/ui/glass-container';
 import { Skeleton } from '@/components/ui/skeleton';
-import { colors } from '@/constants/theme';
 import { useAgenda } from '@/hooks/use-agenda';
 import { useHapticFeedback } from '@/hooks/use-haptic-feedback';
 import { useI18n } from '@/hooks/use-i18n';
-import { formatAgendaDate } from '@/lib/agenda-format';
-import { formatBRL } from '@/lib/finance';
-import type { AgendaPayment, Agendamento, PaymentStatus } from '@/lib/types/agenda';
 
 export type AgendaTab = 'schedule' | 'payments';
-
-const PAYMENT_STATUS_STYLE: Record<PaymentStatus, { chip: string; text: string }> = {
-  pendente: { chip: 'border-warning/40 bg-warning/10', text: 'text-warning' },
-  pago: { chip: 'border-success/40 bg-success/10', text: 'text-success' },
-  reembolsado: { chip: 'border-line bg-elevated', text: 'text-muted' },
-};
 
 function SegmentedControl({
   tab,
@@ -59,46 +49,6 @@ function SegmentedControl({
           </Pressable>
         );
       })}
-    </View>
-  );
-}
-
-function PaymentRow({
-  payment,
-  agendamento,
-}: {
-  payment: AgendaPayment;
-  agendamento?: Agendamento;
-}) {
-  const { t, locale } = useI18n();
-  const style = PAYMENT_STATUS_STYLE[payment.status];
-  const kindLabel =
-    payment.kind === 'deposit' ? t('agenda.payment.deposit') : t('agenda.payment.balance');
-  const dateIso = payment.paidAt ?? payment.createdAt;
-
-  return (
-    <View className="mb-3 flex-row items-center gap-3 rounded-2xl border border-line bg-card p-4">
-      <View className="h-10 w-10 items-center justify-center rounded-xl bg-elevated">
-        <Wallet size={18} color={colors.accent} />
-      </View>
-      <View className="flex-1">
-        <AppText variant="body" className="text-sm font-semibold" numberOfLines={1}>
-          {agendamento ? `${kindLabel} · ${agendamento.artista.name}` : kindLabel}
-        </AppText>
-        <AppText variant="muted" className="text-xs">
-          {formatAgendaDate(dateIso, locale)}
-        </AppText>
-      </View>
-      <View className="items-end gap-1">
-        <AppText variant="body" className="text-sm font-semibold">
-          {formatBRL(payment.amountCents)}
-        </AppText>
-        <View className={`rounded-full border px-2 py-0.5 ${style.chip}`}>
-          <AppText variant="muted" className={`text-[10px] font-semibold ${style.text}`}>
-            {t(`agenda.payment.status.${payment.status}`)}
-          </AppText>
-        </View>
-      </View>
     </View>
   );
 }
@@ -148,13 +98,7 @@ export function AgendaPaymentsWorkspace({ onStartBooking }: AgendaPaymentsWorksp
   const [tab, setTab] = useState<AgendaTab>('schedule');
   const { triggerHaptic } = useHapticFeedback();
   const { t } = useI18n();
-  const { agendamentos, payments, isLoading, isError, refetch } = useAgenda();
-
-  const agendamentosById = useMemo(() => {
-    const map = new Map<string, Agendamento>();
-    for (const agendamento of agendamentos) map.set(agendamento.id, agendamento);
-    return map;
-  }, [agendamentos]);
+  const { agendamentos, isLoading, isError, refetch } = useAgenda();
 
   const handleTabChange = useCallback(
     (next: AgendaTab) => {
@@ -199,28 +143,5 @@ export function AgendaPaymentsWorkspace({ onStartBooking }: AgendaPaymentsWorksp
     );
   }
 
-  return (
-    <FlatList
-      data={payments}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => (
-        <PaymentRow payment={item} agendamento={agendamentosById.get(item.agendamentoId)} />
-      )}
-      ListHeaderComponent={header}
-      ListEmptyComponent={
-        isLoading ? (
-          <AgendaSkeleton />
-        ) : isError ? (
-          <AgendaError onRetry={refetch} />
-        ) : (
-          <TrackerEmptyState variant="payments" />
-        )
-      }
-      contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
-      showsVerticalScrollIndicator={false}
-      initialNumToRender={6}
-      windowSize={7}
-      removeClippedSubviews
-    />
-  );
+  return <PaymentsPanel header={header} />;
 }
