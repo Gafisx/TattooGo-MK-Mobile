@@ -44,6 +44,12 @@ export default function PerfilScreen() {
           onPress={() => router.push('/seja-tatuador')}
         />
         <ListRow
+          icon="briefcase-outline"
+          title="Painel do tatuador"
+          subtitle="Agenda do estúdio e verificação"
+          onPress={() => router.push('/tatuador')}
+        />
+        <ListRow
           icon="hourglass-outline"
           title="Verificação KYC"
           subtitle="Acompanhe o status"

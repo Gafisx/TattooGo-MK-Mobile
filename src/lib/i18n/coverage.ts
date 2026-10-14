@@ -106,10 +106,33 @@ export const REQUIRED_AGENDA_KEYS = [
   'agenda.payment.status.reembolsado',
 ] as const;
 
+/** Keys o Dashboard do tatuador (KYC) e a Agenda do estúdio esperam em TODOS os locales. */
+export const REQUIRED_KYC_KEYS = [
+  'kyc.blockTitle',
+  'kyc.signOut',
+  'kyc.pendente.title',
+  'kyc.pendente.message',
+  'kyc.em_analise.title',
+  'kyc.em_analise.message',
+  'kyc.rejeitado.title',
+  'kyc.rejeitado.message',
+  'kyc.aprovado.title',
+  'kyc.aprovado.message',
+  'kyc.nao_aplicavel.title',
+  'kyc.nao_aplicavel.message',
+  'studio.agenda.title',
+  'studio.agenda.subtitle',
+  'studio.agenda.today',
+  'studio.agenda.upcoming',
+  'studio.agenda.empty.title',
+  'studio.agenda.empty.description',
+] as const;
+
 export const REQUIRED_KEYS = [
   ...REQUIRED_UI_KEYS,
   ...REQUIRED_DOMAIN_KEYS,
   ...REQUIRED_AGENDA_KEYS,
+  ...REQUIRED_KYC_KEYS,
 ];
 
 export interface CoverageReport {

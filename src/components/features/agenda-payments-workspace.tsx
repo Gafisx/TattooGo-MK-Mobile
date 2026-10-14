@@ -6,12 +6,16 @@ import {
   ClientTimelineTracker,
   TrackerEmptyState,
 } from '@/components/features/client-timeline-tracker';
+import { StudioAgendaView } from '@/components/features/studio-agenda-view';
 import { AppText } from '@/components/ui/app-text';
 import { GlassContainer } from '@/components/ui/glass-container';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAgenda } from '@/hooks/use-agenda';
 import { useHapticFeedback } from '@/hooks/use-haptic-feedback';
 import { useI18n } from '@/hooks/use-i18n';
+import { useSession } from '@/hooks/use-session';
+import { isStudioRole } from '@/lib/kyc';
+import type { AppRole } from '@/lib/utils/dashboard-gate';
 
 export type AgendaTab = 'schedule' | 'payments';
 
@@ -87,18 +91,32 @@ function AgendaError({ onRetry }: { onRetry: () => void }) {
 
 export interface AgendaPaymentsWorkspaceProps {
   onStartBooking?: () => void;
+  /**
+   * Papel do espectador. Quando tatuador/estúdio, o workspace renderiza a
+   * `StudioAgendaView` (agenda do estúdio) no lugar da timeline do cliente.
+   * Default: role reconciliada em `useSession`.
+   */
+  viewerRole?: AppRole;
 }
 
 /**
  * Workspace de Agenda + Pagamentos do cliente (port de
  * `AgendaPaymentsWorkspace`). Gerencia o seletor segmentado
  * (Agendamentos | Pagamentos) e delega cada item ao rastreador de timeline.
+ *
+ * Para perfis de tatuador/estúdio, delega para a `StudioAgendaView`.
  */
-export function AgendaPaymentsWorkspace({ onStartBooking }: AgendaPaymentsWorkspaceProps) {
+export function AgendaPaymentsWorkspace({
+  onStartBooking,
+  viewerRole,
+}: AgendaPaymentsWorkspaceProps) {
   const [tab, setTab] = useState<AgendaTab>('schedule');
   const { triggerHaptic } = useHapticFeedback();
   const { t } = useI18n();
+  const session = useSession();
   const { agendamentos, isLoading, isError, refetch } = useAgenda();
+
+  const role = viewerRole ?? session.role;
 
   const handleTabChange = useCallback(
     (next: AgendaTab) => {
@@ -109,6 +127,17 @@ export function AgendaPaymentsWorkspace({ onStartBooking }: AgendaPaymentsWorksp
     },
     [triggerHaptic],
   );
+
+  if (isStudioRole(role)) {
+    return (
+      <StudioAgendaView
+        agendamentos={agendamentos}
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
+      />
+    );
+  }
 
   const header = (
     <View className="pb-4 pt-2">

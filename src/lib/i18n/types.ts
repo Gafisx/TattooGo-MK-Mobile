@@ -122,7 +122,25 @@ export type KnownMessageKey =
   | 'payments.gateway.creditCard'
   | 'payments.gateway.processing'
   | 'payments.gateway.success'
-  | 'payments.gateway.paid';
+  | 'payments.gateway.paid'
+  | 'kyc.blockTitle'
+  | 'kyc.signOut'
+  | 'kyc.pendente.title'
+  | 'kyc.pendente.message'
+  | 'kyc.em_analise.title'
+  | 'kyc.em_analise.message'
+  | 'kyc.rejeitado.title'
+  | 'kyc.rejeitado.message'
+  | 'kyc.aprovado.title'
+  | 'kyc.aprovado.message'
+  | 'kyc.nao_aplicavel.title'
+  | 'kyc.nao_aplicavel.message'
+  | 'studio.agenda.title'
+  | 'studio.agenda.subtitle'
+  | 'studio.agenda.today'
+  | 'studio.agenda.upcoming'
+  | 'studio.agenda.empty.title'
+  | 'studio.agenda.empty.description';
 
 export type MessageKey = KnownMessageKey | (string & {});
 
