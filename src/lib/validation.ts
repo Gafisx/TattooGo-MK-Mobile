@@ -44,6 +44,82 @@ export function formatCNPJ(value: string): string {
     .replace(/(\d{4})(\d)/, '$1-$2');
 }
 
+/**
+ * Validates a Brazilian CPF using the official check-digit algorithm.
+ * Accepts formatted input (e.g. `123.456.789-09`).
+ */
+export function isValidCPF(value: string): boolean {
+  const cpf = onlyDigits(value);
+  if (cpf.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(cpf)) return false;
+
+  const calcDigit = (base: string): number => {
+    let sum = 0;
+    for (let i = 0; i < base.length; i += 1) {
+      sum += Number(base[i]) * (base.length + 1 - i);
+    }
+    const remainder = (sum * 10) % 11;
+    return remainder === 10 ? 0 : remainder;
+  };
+
+  const firstDigit = calcDigit(cpf.slice(0, 9));
+  const secondDigit = calcDigit(cpf.slice(0, 9) + firstDigit);
+
+  return cpf === cpf.slice(0, 9) + String(firstDigit) + String(secondDigit);
+}
+
+export function formatCPF(value: string): string {
+  const digits = onlyDigits(value).slice(0, 11);
+  return digits
+    .replace(/^(\d{3})(\d)/, '$1.$2')
+    .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/\.(\d{3})(\d)/, '.$1-$2');
+}
+
+export const BIRTH_DATE_LENGTH = 10;
+
+/** Formats a birth date as `DD/MM/AAAA` while the user types. */
+export function formatBirthDate(value: string): string {
+  const digits = onlyDigits(value).slice(0, 8);
+  return digits
+    .replace(/^(\d{2})(\d)/, '$1/$2')
+    .replace(/^(\d{2})\/(\d{2})(\d)/, '$1/$2/$3');
+}
+
+/** Parses `DD/MM/AAAA` into a real calendar `Date`, or `null` when invalid. */
+export function parseBirthDate(value: string): Date | null {
+  const digits = onlyDigits(value);
+  if (digits.length !== 8) return null;
+
+  const day = Number(digits.slice(0, 2));
+  const month = Number(digits.slice(2, 4));
+  const year = Number(digits.slice(4, 8));
+  const date = new Date(year, month - 1, day);
+
+  const isRealCalendarDate =
+    date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+  if (!isRealCalendarDate) return null;
+
+  const now = new Date();
+  if (date.getTime() > now.getTime()) return null;
+
+  return date;
+}
+
+/** Validates the birth date and enforces a minimum age (default: 18). */
+export function isValidBirthDate(value: string, minAge = 18): boolean {
+  const date = parseBirthDate(value);
+  if (!date) return false;
+
+  const now = new Date();
+  let age = now.getFullYear() - date.getFullYear();
+  const monthDelta = now.getMonth() - date.getMonth();
+  if (monthDelta < 0 || (monthDelta === 0 && now.getDate() < date.getDate())) {
+    age -= 1;
+  }
+  return age >= minAge;
+}
+
 export const OTP_LENGTH = 6;
 
 /** OTP validation never leaks intermediate state; it returns a boolean only. */
