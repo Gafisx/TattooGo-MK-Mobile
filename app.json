@@ -40,6 +40,14 @@
           "resizeMode": "contain"
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O TattooGo MK acede às suas fotos para publicar trabalhos no portfólio.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
       "expo-localization"
     ],
     "experiments": {
