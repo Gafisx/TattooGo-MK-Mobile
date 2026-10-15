@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { AppErrorBoundary } from '@/components/app-error-boundary';
 import { AuthGate } from '@/components/features/auth-gate';
 import { colors } from '@/constants/theme';
 import { bootstrapApp } from '@/lib/bootstrap';
@@ -17,6 +18,10 @@ import { AppProviders } from '@/providers/app-providers';
 // single clean cut from splash -> fully rendered UI, with no black flash.
 SplashScreen.preventAutoHideAsync().catch(() => {});
 SplashScreen.setOptions({ fade: true, duration: 180 });
+
+// Hard ceiling on the splash gate. If bootstrap stalls (storage/network), we
+// still reveal the shell instead of dead-ending on an infinite black screen.
+const BOOTSTRAP_TIMEOUT_MS = 8000;
 
 const navTheme = {
   dark: true,
@@ -41,11 +46,26 @@ export default function RootLayout() {
 
   useEffect(() => {
     let active = true;
-    bootstrapApp().finally(() => {
+    const reveal = () => {
       if (active) setBootstrapped(true);
-    });
+    };
+    const timeout = setTimeout(() => {
+      console.warn('[app] bootstrap excedeu o tempo limite; a revelar a UI.');
+      reveal();
+    }, BOOTSTRAP_TIMEOUT_MS);
+
+    bootstrapApp()
+      .catch((error) => {
+        console.error('[app] bootstrap falhou:', error);
+      })
+      .finally(() => {
+        clearTimeout(timeout);
+        reveal();
+      });
+
     return () => {
       active = false;
+      clearTimeout(timeout);
     };
   }, []);
 
@@ -63,27 +83,29 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.canvas }}>
       <SafeAreaProvider>
-        <AppProviders>
-          <ThemeProvider value={navTheme}>
-            <StatusBar style="light" />
-            <AuthGate>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: colors.canvas },
-                  animation: 'fade',
-                }}>
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="onboarding" />
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="chat/[threadId]" options={{ animation: 'slide_from_right' }} />
-                <Stack.Screen name="ai" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-                <Stack.Screen name="kyc-pendente" />
-                <Stack.Screen name="seja-tatuador" />
-              </Stack>
-            </AuthGate>
-          </ThemeProvider>
-        </AppProviders>
+        <AppErrorBoundary>
+          <AppProviders>
+            <ThemeProvider value={navTheme}>
+              <StatusBar style="light" />
+              <AuthGate>
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: colors.canvas },
+                    animation: 'fade',
+                  }}>
+                  <Stack.Screen name="(auth)" />
+                  <Stack.Screen name="onboarding" />
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="chat/[threadId]" options={{ animation: 'slide_from_right' }} />
+                  <Stack.Screen name="ai" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+                  <Stack.Screen name="kyc-pendente" />
+                  <Stack.Screen name="seja-tatuador" />
+                </Stack>
+              </AuthGate>
+            </ThemeProvider>
+          </AppProviders>
+        </AppErrorBoundary>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
