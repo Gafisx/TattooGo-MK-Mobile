@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { StyleSheet, type ColorValue } from 'react-native';
+import { type ColorValue } from 'react-native';
 
+import { GlassTabBar } from '@/components/ui/glass-tab-bar';
 import { colors } from '@/constants/theme';
 
 const icon =
@@ -15,19 +16,13 @@ const icon =
 export default function TabsLayout() {
   return (
     <Tabs
+      tabBar={(props) => <GlassTabBar {...props} />}
       screenOptions={{
-        // Dark Luxury bottom bar: matte #121212 surface, orange neon when
-        // active, neutral gray when idle. No top header on any tab.
+        // Dark Luxury floating bar: matte glass surface, orange neon when
+        // active, zinc-500 when idle. No top header on any tab.
         headerShown: false,
         tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.tabInactive,
-        tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.line,
-          borderTopWidth: StyleSheet.hairlineWidth,
-          paddingTop: 6,
-        },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarInactiveTintColor: colors.muted,
         sceneStyle: { backgroundColor: colors.canvas },
       }}>
       <Tabs.Screen

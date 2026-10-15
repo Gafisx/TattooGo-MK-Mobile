@@ -7,9 +7,11 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
 import { AppErrorBoundary } from '@/components/app-error-boundary';
 import { AuthGate } from '@/components/features/auth-gate';
+import { ToastContainer } from '@/components/ui/toast-container';
 import { colors } from '@/constants/theme';
 import { bootstrapApp } from '@/lib/bootstrap';
 import { AppProviders } from '@/providers/app-providers';
@@ -85,25 +87,28 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <AppErrorBoundary>
           <AppProviders>
-            <ThemeProvider value={navTheme}>
-              <StatusBar style="light" />
-              <AuthGate>
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                    contentStyle: { backgroundColor: colors.canvas },
-                    animation: 'fade',
-                  }}>
-                  <Stack.Screen name="(auth)" />
-                  <Stack.Screen name="onboarding" />
-                  <Stack.Screen name="(tabs)" />
-                  <Stack.Screen name="chat/[threadId]" options={{ animation: 'slide_from_right' }} />
-                  <Stack.Screen name="ai" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-                  <Stack.Screen name="kyc-pendente" />
-                  <Stack.Screen name="seja-tatuador" />
-                </Stack>
-              </AuthGate>
-            </ThemeProvider>
+            <BottomSheetModalProvider>
+              <ThemeProvider value={navTheme}>
+                <StatusBar style="light" />
+                <AuthGate>
+                  <Stack
+                    screenOptions={{
+                      headerShown: false,
+                      contentStyle: { backgroundColor: colors.canvas },
+                      animation: 'fade',
+                    }}>
+                    <Stack.Screen name="(auth)" />
+                    <Stack.Screen name="onboarding" />
+                    <Stack.Screen name="(tabs)" />
+                    <Stack.Screen name="chat/[threadId]" options={{ animation: 'slide_from_right' }} />
+                    <Stack.Screen name="ai" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+                    <Stack.Screen name="kyc-pendente" />
+                    <Stack.Screen name="seja-tatuador" />
+                  </Stack>
+                </AuthGate>
+                <ToastContainer />
+              </ThemeProvider>
+            </BottomSheetModalProvider>
           </AppProviders>
         </AppErrorBoundary>
       </SafeAreaProvider>
