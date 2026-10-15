@@ -15,11 +15,18 @@ export interface TextFieldProps extends TextInputProps {
 }
 
 /**
+ * QA de toque (Apple-tier): alvo mínimo de 44px e `hitSlop` de 10px para que o
+ * foco não falhe em toques ligeiramente fora do campo.
+ */
+const DEFAULT_HIT_SLOP = { top: 10, bottom: 10, left: 10, right: 10 } as const;
+const MIN_TOUCH_TARGET = { minHeight: 44 } as const;
+
+/**
  * Dark-luxury text input shared by the auth forms. `react-hook-form` passes the
  * field props straight through, so this stays a thin, fully-controlled wrapper.
  */
 export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
-  { label, error, hint, rightAccessory, className, style, ...props },
+  { label, error, hint, rightAccessory, className, style, hitSlop = DEFAULT_HIT_SLOP, ...props },
   ref,
 ) {
   const borderClass = error ? 'border-danger' : 'border-line';
@@ -31,8 +38,9 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
         <TextInput
           ref={ref}
           placeholderTextColor={colors.muted}
+          hitSlop={hitSlop}
           className={`h-12 flex-1 text-base text-ink ${className ?? ''}`}
-          style={style}
+          style={[MIN_TOUCH_TARGET, style]}
           {...props}
         />
         {rightAccessory}

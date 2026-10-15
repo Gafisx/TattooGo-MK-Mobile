@@ -23,6 +23,13 @@ const labelClass: Record<Variant, string> = {
   ghost: 'text-accent',
 };
 
+/**
+ * QA de toque (Apple-tier): alvo mínimo de 44px e `hitSlop` de 10px em todos os
+ * lados para evitar toques falhos ("fat-finger") em ecrãs pequenos.
+ */
+const DEFAULT_HIT_SLOP = { top: 10, bottom: 10, left: 10, right: 10 } as const;
+const MIN_TOUCH_TARGET = { minHeight: 44 } as const;
+
 /** Hardware-accelerated pressable used across the app. */
 export function Button({
   label,
@@ -31,6 +38,7 @@ export function Button({
   disabled,
   className,
   icon,
+  hitSlop = DEFAULT_HIT_SLOP,
   ...props
 }: ButtonProps & { className?: string }) {
   const isDisabled = disabled || loading;
@@ -39,6 +47,8 @@ export function Button({
     <Pressable
       accessibilityRole="button"
       disabled={isDisabled}
+      hitSlop={hitSlop}
+      style={MIN_TOUCH_TARGET}
       className={`h-12 flex-row items-center justify-center rounded-xl px-5 ${variantClass[variant]} ${
         isDisabled ? 'opacity-50' : ''
       } ${className ?? ''}`}

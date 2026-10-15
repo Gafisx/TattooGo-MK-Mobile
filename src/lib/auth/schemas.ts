@@ -1,6 +1,11 @@
 import { z } from 'zod';
 
-import { isValidBirthDate, isValidCNPJ, isValidCPF } from '@/lib/validation';
+import {
+  isValidBirthDate,
+  isValidCNPJ,
+  isValidCPF,
+  USERNAME_PATTERN,
+} from '@/lib/validation';
 
 /**
  * Zod contracts for the native auth forms. They mirror the web register/login
@@ -52,10 +57,37 @@ export const registerSchema = z
     }
   });
 
-export const loginSchema = z.object({
-  email: z.string().trim().toLowerCase().email('E-mail inválido.'),
-  password: z.string().min(1, 'Informe a sua palavra-passe.'),
-});
+/**
+ * Login aceita `identifier` na forma de e-mail **ou** de `@username`, espelhando
+ * o `signIn.create({ identifier })` do Clerk.
+ */
+export const loginSchema = z
+  .object({
+    identifier: z.string().trim().min(1, 'Informe o seu e-mail ou @username.'),
+    password: z.string().min(1, 'Informe a sua palavra-passe.'),
+  })
+  .superRefine((value, ctx) => {
+    const identifier = value.identifier.toLowerCase();
+
+    if (identifier.startsWith('@')) {
+      if (!USERNAME_PATTERN.test(identifier.slice(1))) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['identifier'],
+          message: 'Username inválido. Use 3 a 20 caracteres: letras, números ou _.',
+        });
+      }
+      return;
+    }
+
+    if (!z.string().email().safeParse(identifier).success) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['identifier'],
+        message: 'E-mail inválido.',
+      });
+    }
+  });
 
 export type RegisterFormValues = z.infer<typeof registerSchema>;
 export type LoginFormValues = z.infer<typeof loginSchema>;

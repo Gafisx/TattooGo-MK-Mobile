@@ -126,3 +126,20 @@ export const OTP_LENGTH = 6;
 export function isValidOTP(value: string): boolean {
   return new RegExp(`^\\d{${OTP_LENGTH}}$`).test(value);
 }
+
+export const USERNAME_MAX_LENGTH = 20;
+/** Formato canónico do `@username`: 3–20 caracteres `[a-z0-9_]`. */
+export const USERNAME_PATTERN = /^[a-z0-9_]{3,20}$/;
+
+/** Normaliza a entrada para o formato canónico (minúsculas, sem `@`). */
+export function normalizeUsername(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, '')
+    .slice(0, USERNAME_MAX_LENGTH);
+}
+
+/** Valida um username já normalizado (sem `@`). */
+export function isValidUsername(value: string): boolean {
+  return USERNAME_PATTERN.test(value);
+}
