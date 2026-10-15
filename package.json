@@ -74,6 +74,18 @@
     "model:optimize": "node scripts/optimize-model.mjs"
   },
   "private": true,
+  "overrides": {
+    "expo-router": "~57.0.27",
+    "@expo/ui": "~57.0.24",
+    "@expo/dom-webview": "~57.0.1",
+    "@expo/metro-runtime": "~57.0.17",
+    "@expo/log-box": "~57.0.4",
+    "@expo/schema-utils": "~57.0.2",
+    "expo-glass-effect": "~57.0.4",
+    "expo-linking": "~57.0.13",
+    "expo-symbols": "~57.0.3",
+    "expo-server": "~57.0.3"
+  },
   "expo": {
     "autolinking": {
       "android": {
