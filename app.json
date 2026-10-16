@@ -9,7 +9,6 @@
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0a0a0a",
     "ios": {
-      "icon": "./assets/images/icon.png",
       "supportsTablet": true,
       "bundleIdentifier": "com.tattoogomk.app"
     },
