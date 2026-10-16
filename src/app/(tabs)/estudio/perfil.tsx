@@ -70,6 +70,12 @@ export default function EstudioProfileScreen() {
             subtitle={t('studio.cnpj.subtitle')}
             onPress={() => router.replace('/estudio')}
           />
+          <ListRow
+            icon="location-outline"
+            title="Endereço do estúdio"
+            subtitle="Coordenadas do mapa com proteção contra Fake GPS"
+            onPress={() => router.push('/estudio-endereco')}
+          />
         </View>
       </View>
     </Screen>

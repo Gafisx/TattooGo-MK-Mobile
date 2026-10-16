@@ -87,7 +87,7 @@ export default function SejaTatuadorScreen() {
       </View>
 
       <View className="mt-auto pb-6">
-        <Button label="Enviar para análise" disabled={!canSubmit} onPress={() => router.push('/kyc-pendente')} />
+        <Button label="Enviar para análise" disabled={!canSubmit} onPress={() => router.push('/kyc-verificacao')} />
       </View>
     </Screen>
   );

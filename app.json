@@ -54,7 +54,20 @@
         }
       ],
       "expo-localization",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "O TattooGo MK usa a câmara para a prova de vida e verificação de identidade.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "O TattooGo MK usa a sua localização para definir o endereço do estúdio e detetar coordenadas simuladas."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

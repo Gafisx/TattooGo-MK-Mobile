@@ -79,6 +79,8 @@ function DevStack() {
       <Stack.Screen name="ai" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
       <Stack.Screen name="kyc-pendente" />
       <Stack.Screen name="seja-tatuador" />
+      <Stack.Screen name="kyc-verificacao" />
+      <Stack.Screen name="estudio-endereco" />
     </Stack>
   );
 }
@@ -113,6 +115,8 @@ function GuardedStack({ signedIn, hasRole }: { signedIn: boolean; hasRole: boole
           <Stack.Screen name="ai" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="kyc-pendente" />
           <Stack.Screen name="seja-tatuador" />
+          <Stack.Screen name="kyc-verificacao" />
+          <Stack.Screen name="estudio-endereco" />
         </Stack.Protected>
       </Stack.Protected>
     </Stack>

@@ -65,9 +65,13 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
+  // Multipart payloads (video/photo evidence for KYC liveness) must keep the
+  // boundary `fetch` computes itself, so we never set `Content-Type` for them.
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+
   const finalHeaders: Record<string, string> = {
     Accept: 'application/json',
-    ...(body !== undefined ? { 'Content-Type': 'application/json' } : null),
+    ...(body !== undefined && !isFormData ? { 'Content-Type': 'application/json' } : null),
     ...((headers as Record<string, string> | undefined) ?? null),
   };
 
@@ -90,7 +94,12 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       ...rest,
       headers: finalHeaders,
       signal: controller.signal,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body:
+        body !== undefined
+          ? isFormData
+            ? (body as FormData)
+            : JSON.stringify(body)
+          : undefined,
     });
 
     const isJson = response.headers.get('content-type')?.includes('application/json');
@@ -140,6 +149,8 @@ export const endpoints = {
   kyc: {
     submit: () => '/api/kyc',
     status: () => '/api/kyc/status',
+    /** Multipart endpoint receiving the active-liveness video + live selfie. */
+    liveness: () => '/api/kyc/liveness',
   },
   chat: {
     threads: () => '/api/chat/threads',
@@ -150,5 +161,7 @@ export const endpoints = {
     register: () => '/api/studios/register',
     compliance: () => '/api/studios/compliance',
     affiliation: () => '/api/studios/affiliation',
+    /** Studio address/coordinates, carrying the `isMockedLocation` fraud flag. */
+    location: () => '/api/studios/location',
   },
 } as const;
