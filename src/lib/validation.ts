@@ -86,6 +86,13 @@ export function formatBirthDate(value: string): string {
     .replace(/^(\d{2})\/(\d{2})(\d)/, '$1/$2/$3');
 }
 
+/** Formats a real calendar `Date` back into the canonical `DD/MM/AAAA` string. */
+export function formatBirthDateFromDate(date: Date): string {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${day}/${month}/${date.getFullYear()}`;
+}
+
 /** Parses `DD/MM/AAAA` into a real calendar `Date`, or `null` when invalid. */
 export function parseBirthDate(value: string): Date | null {
   const digits = onlyDigits(value);
