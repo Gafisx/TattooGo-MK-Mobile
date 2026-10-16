@@ -6,15 +6,16 @@ import { ThemeProvider, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
 import { AppErrorBoundary } from '@/components/app-error-boundary';
-import { AuthGate } from '@/components/features/auth-gate';
+import { useAuthGuardState } from '@/components/features/auth-gate';
 import { ToastContainer } from '@/components/ui/toast-container';
 import { colors } from '@/constants/theme';
 import { bootstrapApp } from '@/lib/bootstrap';
-import { AppProviders } from '@/providers/app-providers';
+import { AppProviders, isAuthConfigured } from '@/providers/app-providers';
 
 // Keep the native splash up until bootstrap is done. This is what gives us the
 // single clean cut from splash -> fully rendered UI, with no black flash.
@@ -42,6 +43,96 @@ const navTheme = {
     heavy: { fontFamily: 'System', fontWeight: '800' as const },
   },
 };
+
+const screenOptions = {
+  headerShown: false,
+  contentStyle: { backgroundColor: colors.canvas },
+  animation: 'fade',
+} as const;
+
+function Loading() {
+  return (
+    <View
+      style={{
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.canvas,
+      }}>
+      <ActivityIndicator color={colors.accent} />
+    </View>
+  );
+}
+
+/**
+ * Inspectable development navigator (no `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`).
+ * Every route stays reachable so the shell can be reviewed without auth.
+ */
+function DevStack() {
+  return (
+    <Stack screenOptions={screenOptions}>
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="onboarding" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="chat/[threadId]" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="ai" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="kyc-pendente" />
+      <Stack.Screen name="seja-tatuador" />
+    </Stack>
+  );
+}
+
+/**
+ * Auth-guarded navigator.
+ *
+ * `Stack.Protected` removes a screen from the navigation tree entirely while its
+ * `guard` is false. That is what kills the flicker: a signed-out user can never
+ * mount a single frame of `(tabs)` before being sent to `(auth)`. The router
+ * redirects to the first available screen (login) by itself — no imperative
+ * `router.replace` in an effect, and therefore no post-paint race.
+ *
+ * Cascade: signed out -> `(auth)`; signed in without a role -> `onboarding`;
+ * signed in with a role -> the app (`(tabs)` + deep routes).
+ */
+function GuardedStack({ signedIn, hasRole }: { signedIn: boolean; hasRole: boolean }) {
+  return (
+    <Stack screenOptions={screenOptions}>
+      <Stack.Protected guard={!signedIn}>
+        <Stack.Screen name="(auth)" />
+      </Stack.Protected>
+
+      <Stack.Protected guard={signedIn}>
+        <Stack.Protected guard={!hasRole}>
+          <Stack.Screen name="onboarding" />
+        </Stack.Protected>
+
+        <Stack.Protected guard={hasRole}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="chat/[threadId]" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="ai" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="kyc-pendente" />
+          <Stack.Screen name="seja-tatuador" />
+        </Stack.Protected>
+      </Stack.Protected>
+    </Stack>
+  );
+}
+
+/** Only mounted when Clerk is configured, so `useAuth`/`useUser` are safe. */
+function ClerkNavigator() {
+  const { ready, signedIn, hasRole } = useAuthGuardState();
+
+  // Hold on the boot spinner until the guards can be evaluated against a real
+  // session — never render the guarded tree with an unknown auth state.
+  if (!ready) return <Loading />;
+
+  return <GuardedStack signedIn={signedIn} hasRole={hasRole} />;
+}
+
+function RootNavigator() {
+  if (!isAuthConfigured) return <DevStack />;
+  return <ClerkNavigator />;
+}
 
 export default function RootLayout() {
   const [bootstrapped, setBootstrapped] = useState(false);
@@ -90,22 +181,7 @@ export default function RootLayout() {
             <BottomSheetModalProvider>
               <ThemeProvider value={navTheme}>
                 <StatusBar style="light" />
-                <AuthGate>
-                  <Stack
-                    screenOptions={{
-                      headerShown: false,
-                      contentStyle: { backgroundColor: colors.canvas },
-                      animation: 'fade',
-                    }}>
-                    <Stack.Screen name="(auth)" />
-                    <Stack.Screen name="onboarding" />
-                    <Stack.Screen name="(tabs)" />
-                    <Stack.Screen name="chat/[threadId]" options={{ animation: 'slide_from_right' }} />
-                    <Stack.Screen name="ai" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-                    <Stack.Screen name="kyc-pendente" />
-                    <Stack.Screen name="seja-tatuador" />
-                  </Stack>
-                </AuthGate>
+                <RootNavigator />
                 <ToastContainer />
               </ThemeProvider>
             </BottomSheetModalProvider>

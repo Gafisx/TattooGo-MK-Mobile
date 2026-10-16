@@ -24,6 +24,28 @@ export const isAuthConfigured = clerkPublishableKey !== null;
 const API_URL_PATTERN = /^https?:\/\/[^\s]+$/i;
 const CLERK_KEY_PATTERN = /^pk_(test|live)_[A-Za-z0-9]+$/;
 
+/**
+ * Shapes that identify a *secret* credential. They must never be shipped in an
+ * `EXPO_PUBLIC_*` variable: Metro inlines those values into the client bundle,
+ * where anyone can read them. A hit here is treated as a fatal leak.
+ */
+const SECRET_VALUE_PATTERNS: readonly { label: string; pattern: RegExp }[] = [
+  { label: 'chave secreta do Clerk (sk_...)', pattern: /^sk_(test|live)_/i },
+  { label: 'chave secreta do Stripe (sk_...)', pattern: /^sk_(live|test)_/i },
+  { label: 'service role key do Supabase', pattern: /^service_role/i },
+  { label: 'chave privada (PEM)', pattern: /-----BEGIN [A-Z ]*PRIVATE KEY-----/ },
+];
+
+/** Returns the human label of a detected secret, or `null` when the value is safe to bundle. */
+function detectSecret(value: string): string | null {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return null;
+  for (const { label, pattern } of SECRET_VALUE_PATTERNS) {
+    if (pattern.test(trimmed)) return label;
+  }
+  return null;
+}
+
 export interface EnvIssue {
   key: string;
   message: string;
@@ -44,7 +66,19 @@ export function validatePublicEnv(): EnvIssue[] {
   const issues: EnvIssue[] = [];
   const isProduction = process.env.NODE_ENV === 'production';
 
-  if (rawApiUrl.length > 0 && !API_URL_PATTERN.test(rawApiUrl)) {
+  // Secret-leak sweep: nothing that looks like a private credential may be
+  // bundled. This is the enforcement of the "public vars contain public keys
+  // only" rule; the fix (move the call to the backend) is the app owner's.
+  const apiSecret = detectSecret(rawApiUrl);
+  const clerkSecret = detectSecret(rawClerkKey);
+
+  if (apiSecret) {
+    issues.push({
+      key: 'EXPO_PUBLIC_API_URL',
+      message: `${apiSecret} exposta num valor público — TODO: mover para o backend e remover do bundle.`,
+      fatal: true,
+    });
+  } else if (rawApiUrl.length > 0 && !API_URL_PATTERN.test(rawApiUrl)) {
     issues.push({
       key: 'EXPO_PUBLIC_API_URL',
       message: `não é um URL http(s) válido: "${rawApiUrl}"`,
@@ -52,7 +86,13 @@ export function validatePublicEnv(): EnvIssue[] {
     });
   }
 
-  if (clerkPublishableKey && !CLERK_KEY_PATTERN.test(clerkPublishableKey)) {
+  if (clerkSecret) {
+    issues.push({
+      key: 'EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY',
+      message: `${clerkSecret} exposta num valor público — TODO: mover para o backend e remover do bundle.`,
+      fatal: true,
+    });
+  } else if (clerkPublishableKey && !CLERK_KEY_PATTERN.test(clerkPublishableKey)) {
     issues.push({
       key: 'EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY',
       message: 'deve começar por "pk_test_" ou "pk_live_"',

@@ -1,10 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as SecureStore from 'expo-secure-store';
+
+import { deleteSecret, getSecret, setSecret } from '@/lib/secure-store';
 
 /**
  * Storage keys preserved from the legacy web app so sessions survive the
  * migration to native. Sensitive values (auth token) live in the OS keychain
- * via SecureStore; cosmetic/preference values live in AsyncStorage.
+ * via SecureStore (hardened, device-only accessibility); cosmetic/preference
+ * values live in AsyncStorage.
  */
 export const STORAGE_KEYS = {
   token: 'tattoogo_token',
@@ -17,14 +19,14 @@ const SECURE_KEYS: ReadonlySet<string> = new Set([STORAGE_KEYS.token]);
 
 async function readKey(key: string): Promise<string | null> {
   if (SECURE_KEYS.has(key)) {
-    return SecureStore.getItemAsync(key);
+    return getSecret(key);
   }
   return AsyncStorage.getItem(key);
 }
 
 async function writeKey(key: string, value: string): Promise<void> {
   if (SECURE_KEYS.has(key)) {
-    await SecureStore.setItemAsync(key, value);
+    await setSecret(key, value);
     return;
   }
   await AsyncStorage.setItem(key, value);
@@ -32,7 +34,7 @@ async function writeKey(key: string, value: string): Promise<void> {
 
 async function deleteKey(key: string): Promise<void> {
   if (SECURE_KEYS.has(key)) {
-    await SecureStore.deleteItemAsync(key);
+    await deleteSecret(key);
     return;
   }
   await AsyncStorage.removeItem(key);
@@ -44,11 +46,11 @@ export const storage = {
   remove: deleteKey,
 };
 
-/** Auth token helpers built on top of the secure storage layer. */
+/** Auth token helpers built on top of the hardened secure storage layer. */
 export const authToken = {
-  get: () => SecureStore.getItemAsync(STORAGE_KEYS.token),
-  set: (token: string) => SecureStore.setItemAsync(STORAGE_KEYS.token, token),
-  clear: () => SecureStore.deleteItemAsync(STORAGE_KEYS.token),
+  get: () => getSecret(STORAGE_KEYS.token),
+  set: (token: string) => setSecret(STORAGE_KEYS.token, token),
+  clear: () => deleteSecret(STORAGE_KEYS.token),
 };
 
 export type ThemePreference = 'light' | 'dark' | 'system';
