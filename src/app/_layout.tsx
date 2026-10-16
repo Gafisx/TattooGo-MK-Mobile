@@ -12,6 +12,7 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
 import { AppErrorBoundary } from '@/components/app-error-boundary';
 import { useAuthGuardState } from '@/components/features/auth-gate';
+import { DeviceTrustGuard } from '@/components/features/device-trust-guard';
 import { ToastContainer } from '@/components/ui/toast-container';
 import { colors } from '@/constants/theme';
 import { bootstrapApp } from '@/lib/bootstrap';
@@ -181,7 +182,9 @@ export default function RootLayout() {
             <BottomSheetModalProvider>
               <ThemeProvider value={navTheme}>
                 <StatusBar style="light" />
-                <RootNavigator />
+                <DeviceTrustGuard>
+                  <RootNavigator />
+                </DeviceTrustGuard>
                 <ToastContainer />
               </ThemeProvider>
             </BottomSheetModalProvider>
