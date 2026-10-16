@@ -1,11 +1,49 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs, usePathname } from 'expo-router';
+import { Tabs, router, usePathname } from 'expo-router';
+import { useCallback, useRef, useState } from 'react';
 import { View, type ColorValue } from 'react-native';
 
+import {
+  ActionSheet,
+  type ActionSheetAction,
+  type ActionSheetRef,
+} from '@/components/ui/action-sheet';
 import { AppHeader } from '@/components/ui/app-header';
 import { GlassTabBar } from '@/components/ui/glass-tab-bar';
 import { AppHeaderShownContext } from '@/components/ui/header-context';
+import { TattooMachineMenuTrigger } from '@/components/ui/menu-trigger';
 import { colors } from '@/constants/theme';
+
+const MENU_ACTIONS: ActionSheetAction[] = [
+  {
+    key: 'perfil',
+    label: 'Meu perfil',
+    description: 'Conta, agendamentos e preferências',
+    icon: 'person-outline',
+    onPress: () => router.push('/perfil'),
+  },
+  {
+    key: 'ai',
+    label: 'Estúdio de IA',
+    description: 'Gere ideias de tatuagem',
+    icon: 'sparkles-outline',
+    onPress: () => router.push('/ai'),
+  },
+  {
+    key: 'seja-tatuador',
+    label: 'Seja um tatuador',
+    description: 'Envie seus dados e CNPJ',
+    icon: 'shield-checkmark-outline',
+    onPress: () => router.push('/seja-tatuador'),
+  },
+  {
+    key: 'preferencias',
+    label: 'Preferências',
+    description: 'Tema e idioma',
+    icon: 'settings-outline',
+    onPress: () => router.push('/perfil'),
+  },
+];
 
 const icon =
   (name: keyof typeof Ionicons.glyphMap, focusedName: keyof typeof Ionicons.glyphMap) => {
@@ -36,11 +74,25 @@ function resolveHeaderTitle(pathname: string): string {
 
 export default function TabsLayout() {
   const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<ActionSheetRef>(null);
+
+  const toggleMenu = useCallback(() => {
+    if (menuOpen) {
+      menuRef.current?.dismiss();
+      return;
+    }
+    setMenuOpen(true);
+    menuRef.current?.present();
+  }, [menuOpen]);
 
   return (
     <AppHeaderShownContext.Provider value={true}>
       <View style={{ flex: 1, backgroundColor: colors.canvas }}>
-        <AppHeader title={resolveHeaderTitle(pathname)} />
+        <AppHeader
+          title={resolveHeaderTitle(pathname)}
+          right={<TattooMachineMenuTrigger open={menuOpen} onPress={toggleMenu} />}
+        />
         <Tabs
           tabBar={(props) => <GlassTabBar {...props} />}
           screenOptions={{
@@ -75,6 +127,14 @@ export default function TabsLayout() {
           <Tabs.Screen name="tatuador" options={{ href: null }} />
           <Tabs.Screen name="estudio" options={{ href: null }} />
         </Tabs>
+
+        <ActionSheet
+          ref={menuRef}
+          title="Conta"
+          description="Acesso rápido ao seu perfil"
+          actions={MENU_ACTIONS}
+          onDismiss={() => setMenuOpen(false)}
+        />
       </View>
     </AppHeaderShownContext.Provider>
   );

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 
 import { PaymentsPanel } from '@/components/features/client-payments-panel';
@@ -10,53 +10,18 @@ import { StudioAgendaView } from '@/components/features/studio-agenda-view';
 import { StudioPaymentsPanel } from '@/components/features/studio-payments-panel';
 import { AppText } from '@/components/ui/app-text';
 import { GlassContainer } from '@/components/ui/glass-container';
+import {
+  SegmentedControl,
+  type SegmentedControlOption,
+} from '@/components/ui/segmented-control';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAgenda } from '@/hooks/use-agenda';
-import { useHapticFeedback } from '@/hooks/use-haptic-feedback';
 import { useI18n } from '@/hooks/use-i18n';
 import { useSession } from '@/hooks/use-session';
 import { isStudioRole } from '@/lib/kyc';
 import type { AppRole } from '@/lib/utils/dashboard-gate';
 
 export type AgendaTab = 'schedule' | 'payments';
-
-function SegmentedControl({
-  tab,
-  onChange,
-}: {
-  tab: AgendaTab;
-  onChange: (next: AgendaTab) => void;
-}) {
-  const { t } = useI18n();
-  const segments: { value: AgendaTab; label: string }[] = [
-    { value: 'schedule', label: t('agenda.tab.schedule') },
-    { value: 'payments', label: t('agenda.tab.payments') },
-  ];
-
-  return (
-    <View className="mt-4 flex-row rounded-xl border border-line bg-surface p-1">
-      {segments.map((segment) => {
-        const selected = tab === segment.value;
-        return (
-          <Pressable
-            key={segment.value}
-            onPress={() => onChange(segment.value)}
-            accessibilityRole="tab"
-            accessibilityState={{ selected }}
-            className={`flex-1 rounded-lg py-2 ${selected ? 'bg-accent' : 'active:bg-elevated'}`}>
-            <AppText
-              variant="body"
-              className={`text-center text-sm font-semibold ${
-                selected ? 'text-canvas' : 'text-muted'
-              }`}>
-              {segment.label}
-            </AppText>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
 
 function AgendaSkeleton() {
   return (
@@ -113,28 +78,31 @@ export function AgendaPaymentsWorkspace({
   viewerRole,
 }: AgendaPaymentsWorkspaceProps) {
   const [tab, setTab] = useState<AgendaTab>('schedule');
-  const { triggerHaptic } = useHapticFeedback();
   const { t } = useI18n();
   const session = useSession();
   const { agendamentos, isLoading, isError, refetch } = useAgenda();
 
   const role = viewerRole ?? session.role;
 
-  const handleTabChange = useCallback(
-    (next: AgendaTab) => {
-      setTab((current) => {
-        if (current !== next) void triggerHaptic('selection');
-        return next;
-      });
-    },
-    [triggerHaptic],
-  );
+  const segments: SegmentedControlOption<AgendaTab>[] = [
+    { value: 'schedule', label: t('agenda.tab.schedule') },
+    { value: 'payments', label: t('agenda.tab.payments') },
+  ];
+
+  const handleTabChange = (next: AgendaTab) => {
+    setTab(next);
+  };
 
   if (isStudioRole(role)) {
     return (
       <View className="flex-1">
         <View className="px-5 pt-3">
-          <SegmentedControl tab={tab} onChange={handleTabChange} />
+          <SegmentedControl
+            options={segments}
+            value={tab}
+            onChange={handleTabChange}
+            className="mt-4"
+          />
         </View>
         <View className="flex-1">
           {tab === 'payments' ? (
@@ -156,7 +124,12 @@ export function AgendaPaymentsWorkspace({
     <View className="pb-4 pt-2">
       <AppText variant="title">{t('agenda.title')}</AppText>
       <AppText variant="muted">{t('agenda.subtitle')}</AppText>
-      <SegmentedControl tab={tab} onChange={handleTabChange} />
+      <SegmentedControl
+        options={segments}
+        value={tab}
+        onChange={handleTabChange}
+        className="mt-4"
+      />
     </View>
   );
 

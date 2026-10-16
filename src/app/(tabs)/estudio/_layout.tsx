@@ -1,16 +1,19 @@
 import { Slot, router, usePathname } from 'expo-router';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
-import { AppText } from '@/components/ui/app-text';
-import { useHapticFeedback } from '@/hooks/use-haptic-feedback';
+import {
+  SegmentedControl,
+  type SegmentedControlOption,
+} from '@/components/ui/segmented-control';
 import { useI18n } from '@/hooks/use-i18n';
 import type { MessageKey } from '@/lib/i18n/types';
 
 type StudioTabKey = 'home' | 'agenda' | 'profile';
+type StudioTabHref = '/estudio' | '/estudio/agendar' | '/estudio/perfil';
 
 interface StudioTab {
   key: StudioTabKey;
-  href: '/estudio' | '/estudio/agendar' | '/estudio/perfil';
+  href: StudioTabHref;
   labelKey: MessageKey;
 }
 
@@ -19,6 +22,13 @@ const TABS: StudioTab[] = [
   { key: 'agenda', href: '/estudio/agendar', labelKey: 'studio.dashboard.tab.agenda' },
   { key: 'profile', href: '/estudio/perfil', labelKey: 'studio.dashboard.tab.profile' },
 ];
+
+function resolveActiveHref(pathname: string): StudioTabHref {
+  const match = TABS.find((tab) =>
+    tab.href === '/estudio' ? pathname === '/estudio' : pathname.startsWith(tab.href),
+  );
+  return match?.href ?? '/estudio';
+}
 
 /**
  * Layout do Dashboard do Estúdio (role `estudio`).
@@ -31,37 +41,21 @@ const TABS: StudioTab[] = [
  */
 export default function EstudioLayout() {
   const { t } = useI18n();
-  const { triggerHaptic } = useHapticFeedback();
   const pathname = usePathname();
+
+  const segments: SegmentedControlOption<StudioTabHref>[] = TABS.map((tab) => ({
+    value: tab.href,
+    label: t(tab.labelKey),
+  }));
 
   return (
     <View className="flex-1 bg-canvas">
-      <View className="mx-5 mt-2 flex-row rounded-xl border border-line bg-surface p-1">
-        {TABS.map((tab) => {
-          const active =
-            tab.href === '/estudio' ? pathname === '/estudio' : pathname.startsWith(tab.href);
-          return (
-            <Pressable
-              key={tab.key}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: active }}
-              onPress={() => {
-                if (active) return;
-                void triggerHaptic('selection');
-                router.replace(tab.href);
-              }}
-              className={`flex-1 rounded-lg py-2 ${active ? 'bg-accent' : 'active:bg-elevated'}`}>
-              <AppText
-                variant="body"
-                className={`text-center text-sm font-semibold ${
-                  active ? 'text-canvas' : 'text-muted'
-                }`}>
-                {t(tab.labelKey)}
-              </AppText>
-            </Pressable>
-          );
-        })}
-      </View>
+      <SegmentedControl
+        options={segments}
+        value={resolveActiveHref(pathname)}
+        onChange={(href) => router.replace(href)}
+        className="mx-5 mt-2"
+      />
       <View className="flex-1">
         <Slot />
       </View>
