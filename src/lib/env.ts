@@ -11,6 +11,9 @@ export const API_FALLBACK_URL = 'https://api.tattoogomk.com.br';
 
 const rawApiUrl = (process.env.EXPO_PUBLIC_API_URL ?? '').trim();
 const rawClerkKey = (process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? '').trim();
+const rawIntegrityProjectNumber = (
+  process.env.EXPO_PUBLIC_APP_INTEGRITY_CLOUD_PROJECT_NUMBER ?? ''
+).trim();
 
 /** Backend base URL, always non-empty (falls back to the production Render host). */
 export const apiBaseUrl = rawApiUrl.length > 0 ? rawApiUrl : API_FALLBACK_URL;
@@ -20,6 +23,14 @@ export const clerkPublishableKey = rawClerkKey.length > 0 ? rawClerkKey : null;
 
 /** Whether native Clerk auth is configured for this build. */
 export const isAuthConfigured = clerkPublishableKey !== null;
+
+/**
+ * Google Cloud project number used by the Android Play Integrity provider, or
+ * `null` when unset. iOS App Attest needs no client value (it relies on the
+ * bundle id + App Attest entitlement), so this only gates the Android path.
+ */
+export const appIntegrityCloudProjectNumber =
+  rawIntegrityProjectNumber.length > 0 ? rawIntegrityProjectNumber : null;
 
 const API_URL_PATTERN = /^https?:\/\/[^\s]+$/i;
 const CLERK_KEY_PATTERN = /^pk_(test|live)_[A-Za-z0-9]+$/;

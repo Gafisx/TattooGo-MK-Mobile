@@ -1,6 +1,7 @@
 import { reportPublicEnv } from './env';
 import { i18nStore } from './i18n/store';
 import { offlineQueue } from './offline-queue';
+import { prepareHardwareAttestation } from './security/hardware-attestation';
 import {
   migrateLegacyWebStorage,
   preferences,
@@ -51,6 +52,11 @@ export async function bootstrapApp(options: BootstrapOptions = {}): Promise<Boot
 
     // Restore any likes queued while offline and start draining on reconnect.
     await offlineQueue.hydrate();
+
+    // Warm up the hardware attestation provider (Play Integrity / App Attest)
+    // in the background so the first critical request attaches its token with
+    // no extra latency. Errors are swallowed inside the service.
+    void prepareHardwareAttestation();
   } catch {
     // Boot must never dead-end on storage errors; fall back to defaults.
   }

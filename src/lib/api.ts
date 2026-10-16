@@ -1,9 +1,31 @@
 import { getAuthToken } from './auth/token';
 import { apiBaseUrl } from './env';
+import { getIntegrityToken } from './security/hardware-attestation';
 
 export const API_BASE_URL = apiBaseUrl;
 
 const DEFAULT_TIMEOUT_MS = 20000;
+
+/** Header carrying the hardware-attestation token to the backend. */
+export const APP_INTEGRITY_HEADER = 'X-App-Integrity-Token';
+
+/**
+ * Endpoints whose misuse (credential stuffing, fake account farms, forged KYC)
+ * is the most damaging, so they are hardware-attested by default. The backend
+ * verifies the token and decides whether to reject the request.
+ */
+const CRITICAL_PATH_PATTERNS: readonly RegExp[] = [
+  /\/api\/kyc\b/i,
+  /\/api\/auth\b/i,
+  /\/api\/(login|sign-?in|signup|sign-?up|cadastro|registro)\b/i,
+  /\/api\/studios\/(register|validate-cnpj)\b/i,
+];
+
+/** Whether a request must carry an attestation token. */
+function requiresIntegrity(path: string, explicit: boolean | undefined): boolean {
+  if (explicit !== undefined) return explicit;
+  return CRITICAL_PATH_PATTERNS.some((pattern) => pattern.test(path));
+}
 
 export class ApiError extends Error {
   readonly status: number;
@@ -21,10 +43,23 @@ export interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
   auth?: boolean;
   timeoutMs?: number;
+  /**
+   * Force or suppress hardware attestation for this call. When omitted, the
+   * endpoint is matched against `CRITICAL_PATH_PATTERNS` (login, sign-up, KYC,
+   * studio registration, ...) to decide automatically.
+   */
+  attest?: boolean;
 }
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { body, auth = true, timeoutMs = DEFAULT_TIMEOUT_MS, headers, ...rest } = options;
+  const {
+    body,
+    auth = true,
+    timeoutMs = DEFAULT_TIMEOUT_MS,
+    attest,
+    headers,
+    ...rest
+  } = options;
   const url = path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
 
   const controller = new AbortController();
@@ -41,6 +76,13 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     // Bearer header. No web cookies / credentials are ever sent.
     const token = await getAuthToken();
     if (token) finalHeaders.Authorization = `Bearer ${token}`;
+  }
+
+  if (requiresIntegrity(path, attest)) {
+    // Hardware attestation is best-effort: when no token can be minted the
+    // request still goes out, and the backend applies its own policy.
+    const integrityToken = await getIntegrityToken({ scope: path, payload: body });
+    if (integrityToken) finalHeaders[APP_INTEGRITY_HEADER] = integrityToken;
   }
 
   try {
