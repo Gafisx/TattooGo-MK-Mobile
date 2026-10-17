@@ -1,7 +1,8 @@
-import { reportPublicEnv } from './env';
+import { Platform } from 'react-native';
+
+import { appIntegrityCloudProjectNumber, reportPublicEnv } from './env';
 import { i18nStore } from './i18n/store';
 import { offlineQueue } from './offline-queue';
-import { prepareHardwareAttestation } from './security/hardware-attestation';
 import {
   migrateLegacyWebStorage,
   preferences,
@@ -21,6 +22,39 @@ const DEFAULT_LOCALE: LocalePreference = 'pt-BR';
 export interface BootstrapOptions {
   /** Values captured from the legacy web build, if a bridge provided them. */
   legacy?: LegacyWebStoragePayload;
+}
+
+/** Delay before touching Play Integrity / App Attest after the first frame. */
+const ATTESTATION_WARMUP_DELAY_MS = 4000;
+
+/**
+ * Warms up the attestation provider *after* the UI is interactive.
+ *
+ * Play Integrity is an alpha native module that binds to Google Play services
+ * and validates the Cloud project number. Running it inside the boot gate means
+ * a slow/failed provider — or a build missing the native module — happens while
+ * the JS runtime is still coming up, which on Android can surface as a hard
+ * crash instead of a catchable JS error. Deferring it isolates any failure to
+ * this best-effort task; `prepareHardwareAttestation` already swallows errors,
+ * and the dynamic import protects bundle evaluation as an extra layer.
+ */
+function scheduleAttestationWarmUp(): void {
+  if (Platform.OS === 'web') return;
+  if (Platform.OS === 'android' && !appIntegrityCloudProjectNumber) return;
+
+  const run = () => {
+    void import('./security/hardware-attestation')
+      .then(({ prepareHardwareAttestation }) => prepareHardwareAttestation())
+      .catch((error) => {
+        console.warn('[bootstrap] warm-up de atestação ignorado:', error);
+      });
+  };
+
+  try {
+    setTimeout(run, ATTESTATION_WARMUP_DELAY_MS);
+  } catch {
+    // Timer unavailable (very old runtime): skip the optional warm-up.
+  }
 }
 
 /**
@@ -53,10 +87,9 @@ export async function bootstrapApp(options: BootstrapOptions = {}): Promise<Boot
     // Restore any likes queued while offline and start draining on reconnect.
     await offlineQueue.hydrate();
 
-    // Warm up the hardware attestation provider (Play Integrity / App Attest)
-    // in the background so the first critical request attaches its token with
-    // no extra latency. Errors are swallowed inside the service.
-    void prepareHardwareAttestation();
+    // Never block the first frame on native attestation. Schedule it once the
+    // UI is interactive; it is best-effort and must not be able to crash boot.
+    scheduleAttestationWarmUp();
   } catch {
     // Boot must never dead-end on storage errors; fall back to defaults.
   }

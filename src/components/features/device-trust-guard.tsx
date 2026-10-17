@@ -77,6 +77,22 @@ export interface DeviceTrustGuardProps {
 }
 
 /**
+ * Reads `Device.isDevice` defensively. The value is a synchronous property of
+ * the native module, but a dev client built without `expo-device` (or with a
+ * mismatched binary) can throw while resolving it. A failed read must never
+ * reach the UI thread; fall back to the `__DEV__` escape hatch and let the
+ * async probe below decide.
+ */
+function detectPhysicalDevice(): boolean {
+  try {
+    return Device.isDevice || __DEV__;
+  } catch (error) {
+    console.warn('[device-trust-guard] leitura do dispositivo falhou:', error);
+    return __DEV__;
+  }
+}
+
+/**
  * Anti-spoofing / anti-tamper gate for the whole app.
  *
  * Blocks two untrusted runtimes:
@@ -93,7 +109,7 @@ export interface DeviceTrustGuardProps {
  */
 export function DeviceTrustGuard({ children }: DeviceTrustGuardProps) {
   // Simulators/emulators are only tolerated on developer builds.
-  const physicalDevice = Device.isDevice || __DEV__;
+  const physicalDevice = detectPhysicalDevice();
   const [status, setStatus] = useState<TrustStatus>(
     physicalDevice ? 'checking' : 'untrusted',
   );
@@ -103,7 +119,12 @@ export function DeviceTrustGuard({ children }: DeviceTrustGuardProps) {
 
     let mounted = true;
 
-    Device.isRootedExperimentalAsync()
+    // `isRootedExperimentalAsync` shells out to `su`/system paths. Defer the
+    // invocation into a promise so a synchronous throw (module missing) is
+    // funnelled into the same fail-open `catch` as an async rejection, and no
+    // native failure can bubble into the React tree during boot.
+    Promise.resolve()
+      .then(() => Device.isRootedExperimentalAsync())
       .then((rooted) => {
         if (mounted) setStatus(rooted ? 'untrusted' : 'trusted');
       })

@@ -21,7 +21,13 @@ import { AppProviders, isAuthConfigured } from '@/providers/app-providers';
 // Keep the native splash up until bootstrap is done. This is what gives us the
 // single clean cut from splash -> fully rendered UI, with no black flash.
 SplashScreen.preventAutoHideAsync().catch(() => {});
-SplashScreen.setOptions({ fade: true, duration: 180 });
+try {
+  SplashScreen.setOptions({ fade: true, duration: 180 });
+} catch (error) {
+  // Older native runtimes may not expose `setOptions`; never let the splash
+  // configuration abort bundle evaluation.
+  console.warn('[app] SplashScreen.setOptions indisponível:', error);
+}
 
 // Hard ceiling on the splash gate. If bootstrap stalls (storage/network), we
 // still reveal the shell instead of dead-ending on an infinite black screen.

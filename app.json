@@ -17,6 +17,11 @@
     },
     "android": {
       "package": "com.tattoogomk.app",
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#0a0a0a",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -59,7 +64,8 @@
         "expo-camera",
         {
           "cameraPermission": "O TattooGo MK usa a câmara para a prova de vida e verificação de identidade.",
-          "recordAudioAndroid": false
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": false
         }
       ],
       [

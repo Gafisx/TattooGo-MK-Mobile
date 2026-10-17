@@ -15,7 +15,6 @@
  * attaches the header when a token is available).
  */
 
-import * as AppIntegrity from '@expo/app-integrity';
 import * as Crypto from 'expo-crypto';
 import { Platform } from 'react-native';
 
@@ -36,8 +35,43 @@ const HASH_ENCODING = Crypto.CryptoEncoding.BASE64;
 /** Error returned when the Android token provider has expired and must be rebuilt. */
 const PROVIDER_INVALID_ERROR = 'ERR_APP_INTEGRITY_PROVIDER_INVALID';
 
+/** Play Integrity expects the Google Cloud project number as a plain integer. */
+const CLOUD_PROJECT_NUMBER_PATTERN = /^\d+$/;
+
+type AppIntegrityModule = typeof import('@expo/app-integrity');
+
 let androidProvider: Promise<void> | null = null;
 let iosKeyId: string | null = null;
+let appIntegrityModule: Promise<AppIntegrityModule | null> | null = null;
+
+/**
+ * Loads the native integrity module on demand.
+ *
+ * `@expo/app-integrity` calls `requireNativeModule('ExpoAppIntegrity')` while its
+ * JS module is being evaluated. If a build was produced without the native
+ * module (or with a mismatched binary), a static import throws during bundle
+ * evaluation — before React (and therefore the app error boundary) can mount.
+ * A dynamic import keeps that failure inside the attestation layer, which is
+ * already designed to fail open.
+ */
+function loadAppIntegrity(): Promise<AppIntegrityModule | null> {
+  if (!appIntegrityModule) {
+    appIntegrityModule = import('@expo/app-integrity').catch((error) => {
+      console.warn('[hardware-attestation] módulo nativo indisponível:', error);
+      return null;
+    });
+  }
+  return appIntegrityModule;
+}
+
+/** Requires the module and throws a controlled error when it is unavailable. */
+async function requireAppIntegrity(): Promise<AppIntegrityModule> {
+  const module = await loadAppIntegrity();
+  if (!module) {
+    throw new Error('módulo nativo @expo/app-integrity indisponível neste build');
+  }
+  return module;
+}
 
 /** Computes the base64 SHA-256 digest Play Integrity expects as `requestHash`. */
 async function requestHash(input: string): Promise<string> {
@@ -66,7 +100,13 @@ async function ensureAndroidProvider(): Promise<void> {
   if (!appIntegrityCloudProjectNumber) {
     throw new Error('EXPO_PUBLIC_APP_INTEGRITY_CLOUD_PROJECT_NUMBER não configurado');
   }
+  if (!CLOUD_PROJECT_NUMBER_PATTERN.test(appIntegrityCloudProjectNumber)) {
+    throw new Error(
+      'EXPO_PUBLIC_APP_INTEGRITY_CLOUD_PROJECT_NUMBER deve conter apenas dígitos',
+    );
+  }
   if (!androidProvider) {
+    const AppIntegrity = await requireAppIntegrity();
     androidProvider = AppIntegrity.prepareIntegrityTokenProviderAsync(
       appIntegrityCloudProjectNumber,
     );
@@ -82,6 +122,7 @@ async function ensureAndroidProvider(): Promise<void> {
 /** Requests a Play Integrity verdict token for the given hash. */
 async function androidIntegrityToken(hash: string): Promise<string> {
   await ensureAndroidProvider();
+  const AppIntegrity = await requireAppIntegrity();
   try {
     return await AppIntegrity.requestIntegrityCheckAsync(hash);
   } catch (error) {
@@ -105,6 +146,7 @@ async function ensureIosKeyId(): Promise<string> {
     return stored;
   }
 
+  const AppIntegrity = await requireAppIntegrity();
   const generated = await AppIntegrity.generateKeyAsync();
   await setSecret(IOS_KEY_ID_STORAGE, generated);
   iosKeyId = generated;
@@ -121,12 +163,14 @@ async function ensureIosAttested(keyId: string, challenge: string): Promise<void
   const attested = await getSecret(IOS_ATTESTED_STORAGE);
   if (attested) return;
 
+  const AppIntegrity = await requireAppIntegrity();
   await AppIntegrity.attestKeyAsync(keyId, challenge);
   await setSecret(IOS_ATTESTED_STORAGE, '1');
 }
 
 /** Produces an App Attest assertion signed by the Secure Enclave key. */
 async function iosIntegrityToken(hash: string, challenge?: string): Promise<string> {
+  const AppIntegrity = await requireAppIntegrity();
   if (!AppIntegrity.isSupported) {
     throw new Error('App Attest indisponível neste dispositivo');
   }
@@ -180,8 +224,9 @@ export async function prepareHardwareAttestation(): Promise<void> {
   try {
     if (IS_ANDROID) {
       await ensureAndroidProvider();
-    } else if (IS_IOS && AppIntegrity.isSupported) {
-      await ensureIosKeyId();
+    } else if (IS_IOS) {
+      const AppIntegrity = await requireAppIntegrity();
+      if (AppIntegrity.isSupported) await ensureIosKeyId();
     }
   } catch (error) {
     console.warn('[hardware-attestation] preparação falhou:', error);
