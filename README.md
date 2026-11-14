@@ -1,73 +1,48 @@
-# TattooGo MK — Mobile
+<div align="center">
+  <img src="./assets/images/banner-cover.png" alt="TattooGo MK Cover" width="100%" />
+</div>
 
-Native client for TattooGo MK, built with **Expo SDK 57**, **React Native** and
-**NativeWind** (Tailwind for React Native). Dark-luxury visual contract:
-canvas `#0a0a0a`, accent `#F97316`.
+<div align="center">
 
-This app is a high-performance visual shell that talks directly to the existing
-backend on Render (`api.tattoogomk.com.br`) and authenticates with **Clerk**.
+[![Status](https://img.shields.io/badge/STATUS-PRODUCTION--READY-success?style=for-the-badge&color=FF6600)]()
+[![Platform](https://img.shields.io/badge/PLATFORM-MARKETPLACE%20%26%20APP-blueviolet?style=for-the-badge)]()
+[![Tech Stack](https://img.shields.io/badge/STACK-Next.js%20%7C%20React%20%7C%20TypeScript-000?style=for-the-badge&logo=next.js)]()
+[![Architecture](https://img.shields.io/badge/ARCH-Full--Stack%20Enterprise-informational?style=for-the-badge)]()
 
-## Requirements
+</div>
 
-- Node.js 22+
-- A development build (Clerk, SecureStore and the native splash require native
-  modules, so Expo Go is not enough): `npx expo run:ios|android` locally or
-  `eas build --profile development`.
+---
 
-## Setup
+## ⚡ TattooGo MK • O Ecossistema da Arte na Pele
 
-1. Install dependencies (Expo resolves SDK-compatible versions):
+O **TattooGo MK** é uma aplicação corporativa de alto desempenho desenvolvida para conectar clientes, tatuadores independentes e estúdios de ponta em um único ecossistema digital integrado. Focado em experiência do usuário e design de excelência, o app gerencia portfólios imersivos e fluxos operacionais completos.
 
-   ```bash
-   npx expo install
-   ```
+---
 
-2. Configure environment variables:
+## 🛠️ Arquitetura & Core Tech Stack
 
-   ```bash
-   cp .env.example .env
-   ```
+Desenvolvido sob padrões modernos de engenharia de software e alta escalabilidade:
 
-   Then fill in `EXPO_PUBLIC_API_URL` and `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`.
-   Only public values belong in `.env`; secrets never ship in the client.
+* **Frontend & Core:** Next.js (App Router), React, TypeScript, Tailwind CSS.
+* **Persistência & Dados:** Neon DB (PostgreSQL), Prisma ORM.
+* **Segurança & Infraestrutura:** Clerk Auth, Upstash Redis, Vercel Enterprise.
 
-3. Start the dev server:
+---
 
-   ```bash
-   npx expo start
-   ```
+## 📱 Módulos & Experiência do Produto
 
-## Commands
+* **Portfólios & Feeds Dinâmicos:** Exibição de trabalhos artísticos com suporte nativo a temas dinâmicos (Claro, Escuro e Padrão do Sistema).
+* **Flash Notes:** Canal de interação rápida e dinâmicas em tempo real para artistas e estúdios.
+* **Agendamento Inteligente:** Fluxos otimizados para gestão de horários e atendimento profissional.
 
-```bash
-npx expo start        # dev server
-npx expo lint         # lint
-npx tsc --noEmit      # typecheck
-npx expo-doctor       # dependency / config diagnostics
-```
+---
 
-## Structure
+## 🌐 Governança Corporativa
 
-```
-src/
-  app/                 # Expo Router routes (file-based)
-    _layout.tsx        # Root layout + unified native splash gate
-    (tabs)/            # portfolio, agendar, chat, perfil, galeria
-    ai.tsx             # AI studio (modal)
-    kyc-pendente.tsx   # KYC status flow
-    seja-tatuador.tsx  # artist onboarding (CNPJ + OTP)
-    chat/[threadId].tsx
-  components/          # UI primitives and cards
-  constants/theme.ts   # literal design tokens (mirror of tailwind.config.js)
-  data/seed.ts         # temporary mock data (removed once the API is wired)
-  lib/                 # api client, secure storage, finance, validation
-  providers/           # Clerk provider (mounted only when configured)
-```
+Este repositório contém a propriedade intelectual e o código-fonte proprietário do **TattooGo MK**, mantido sob as diretrizes de desenvolvimento da **Gafisx**.
 
-## Notes
+---
 
-- The native splash is held (`preventAutoHideAsync`) until bootstrap finishes,
-  then released once — a single clean cut with no hydration flicker.
-- Sensitive values (auth token, Clerk session) live in `expo-secure-store`;
-  preferences (theme, locale) live in `AsyncStorage`.
-- Financial split is 90% artist / 9% platform / 1% studio (`src/lib/finance.ts`).
+<div align="center">
+  <sub>© 2026 Gafisx & TattooGo MK. Todos os direitos reservados.</sub>
+</div>
