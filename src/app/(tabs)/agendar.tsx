@@ -7,18 +7,18 @@ import { Screen } from '@/components/ui/screen';
 import { useUiStore } from '@/hooks/use-ui-store';
 
 /**
- * Aba de Agendamentos do cliente (port de `AgendaPaymentsWorkspace`).
+ * Workspace de Agendamentos e Pagamentos do cliente (conectado à rota oficial `/api/agendamentos` do BFF).
  *
  * Guard: exclusiva do CLIENTE (`requireDashboardPerfil('cliente')`). O workspace
  * gerencia o seletor segmentado Agendamentos | Pagamentos e renderiza o
- * rastreador de timeline (`ClientTimelineTracker`) de cada sessão.
+ * rastreador de timeline (`ClientTimelineTracker`) em tempo real.
  */
 export default function AgendarScreen() {
   const setActiveTab = useUiStore((state) => state.setActiveTab);
 
   const handleStartBooking = useCallback(() => {
     setActiveTab('index');
-    router.push('/');
+    router.push('/(tabs)');
   }, [setActiveTab]);
 
   return (
