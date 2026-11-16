@@ -14,6 +14,9 @@ const rawClerkKey = (process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? '').trim()
 const rawIntegrityProjectNumber = (
   process.env.EXPO_PUBLIC_APP_INTEGRITY_CLOUD_PROJECT_NUMBER ?? ''
 ).trim();
+const rawR2PublicUrl = (
+  (process.env as Record<string, string | undefined>).EXPO_PUBLIC_R2_PUBLIC_URL ?? ''
+).trim();
 
 /** Backend base URL, always non-empty (falls back to the production Render host). */
 export const apiBaseUrl = rawApiUrl.length > 0 ? rawApiUrl : API_FALLBACK_URL;
@@ -23,6 +26,12 @@ export const clerkPublishableKey = rawClerkKey.length > 0 ? rawClerkKey : null;
 
 /** Whether native Clerk auth is configured for this build. */
 export const isAuthConfigured = clerkPublishableKey !== null;
+
+/**
+ * Cloudflare R2 public bucket/CDN URL.
+ * Usado para servir mídias públicas ou validar redirects de storage.
+ */
+export const r2PublicUrl = rawR2PublicUrl.length > 0 ? rawR2PublicUrl : null;
 
 /**
  * Google Cloud project number used by the Android Play Integrity provider, or
@@ -68,10 +77,8 @@ export interface EnvIssue {
  * Validates the public configuration. Returns every problem found instead of
  * throwing, so the boot sequence can report all of them at once.
  *
- * `EXPO_PUBLIC_API_URL` is optional (there is a production fallback) but, when
- * provided, must be a well-formed http(s) URL. The Clerk key is optional in
- * development — the shell is intentionally inspectable without auth — but is
- * treated as fatal in production, where a missing key would ship a broken login.
+ * Verifies the presence of `EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`,
+ * and `EXPO_PUBLIC_R2_PUBLIC_URL`, ensuring fail-fast validation in production builds.
  */
 export function validatePublicEnv(): EnvIssue[] {
   const issues: EnvIssue[] = [];
@@ -82,6 +89,7 @@ export function validatePublicEnv(): EnvIssue[] {
   // only" rule; the fix (move the call to the backend) is the app owner's.
   const apiSecret = detectSecret(rawApiUrl);
   const clerkSecret = detectSecret(rawClerkKey);
+  const r2Secret = detectSecret(rawR2PublicUrl);
 
   if (apiSecret) {
     issues.push({
@@ -89,7 +97,13 @@ export function validatePublicEnv(): EnvIssue[] {
       message: `${apiSecret} exposta num valor público — TODO: mover para o backend e remover do bundle.`,
       fatal: true,
     });
-  } else if (rawApiUrl.length > 0 && !API_URL_PATTERN.test(rawApiUrl)) {
+  } else if (!rawApiUrl) {
+    issues.push({
+      key: 'EXPO_PUBLIC_API_URL',
+      message: `ausente — usando fallback padrão "${API_FALLBACK_URL}".`,
+      fatal: isProduction,
+    });
+  } else if (!API_URL_PATTERN.test(rawApiUrl)) {
     issues.push({
       key: 'EXPO_PUBLIC_API_URL',
       message: `não é um URL http(s) válido: "${rawApiUrl}"`,
@@ -103,21 +117,54 @@ export function validatePublicEnv(): EnvIssue[] {
       message: `${clerkSecret} exposta num valor público — TODO: mover para o backend e remover do bundle.`,
       fatal: true,
     });
-  } else if (clerkPublishableKey && !CLERK_KEY_PATTERN.test(clerkPublishableKey)) {
-    issues.push({
-      key: 'EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY',
-      message: 'deve começar por "pk_test_" ou "pk_live_"',
-      fatal: true,
-    });
   } else if (!clerkPublishableKey) {
     issues.push({
       key: 'EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY',
       message: 'ausente — a autenticação nativa fica em modo de desenvolvimento (pass-through).',
       fatal: isProduction,
     });
+  } else if (!CLERK_KEY_PATTERN.test(clerkPublishableKey)) {
+    issues.push({
+      key: 'EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY',
+      message: 'deve começar por "pk_test_" ou "pk_live_"',
+      fatal: true,
+    });
+  }
+
+  if (r2Secret) {
+    issues.push({
+      key: 'EXPO_PUBLIC_R2_PUBLIC_URL',
+      message: `${r2Secret} exposta num valor público — TODO: mover para o backend e remover do bundle.`,
+      fatal: true,
+    });
+  } else if (!rawR2PublicUrl) {
+    issues.push({
+      key: 'EXPO_PUBLIC_R2_PUBLIC_URL',
+      message: 'ausente — URLs de mídia e CDN da Cloudflare R2 podem falhar.',
+      fatal: isProduction,
+    });
+  } else if (!API_URL_PATTERN.test(rawR2PublicUrl)) {
+    issues.push({
+      key: 'EXPO_PUBLIC_R2_PUBLIC_URL',
+      message: `não é um URL http(s) válido: "${rawR2PublicUrl}"`,
+      fatal: true,
+    });
   }
 
   return issues;
+}
+
+/**
+ * Garante em tempo de inicialização (fail-fast) que nenhuma variável pública
+ * obrigatória esteja ausente ou corrompida. Dispara erro se houver falha fatal.
+ */
+export function assertPublicEnv(): void {
+  const issues = validatePublicEnv();
+  const fatalIssues = issues.filter((i) => i.fatal);
+  if (fatalIssues.length > 0) {
+    const errorMsg = fatalIssues.map((i) => `[${i.key}] ${i.message}`).join('\n');
+    throw new Error(`Falha na validação de variáveis de ambiente:\n${errorMsg}`);
+  }
 }
 
 /**

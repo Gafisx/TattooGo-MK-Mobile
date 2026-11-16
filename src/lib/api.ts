@@ -135,16 +135,39 @@ export const api = {
 };
 
 export const endpoints = {
+  artistas: {
+    byId: (id: string) => `/api/artistas/${encodeURIComponent(id)}`,
+    get: (id: string) => `/api/artistas/${encodeURIComponent(id)}`,
+    nearby: (lat?: number, lng?: number) =>
+      lat !== undefined && lng !== undefined
+        ? `/api/artistas/nearby?lat=${lat}&lng=${lng}`
+        : '/api/artistas/nearby',
+  },
   portfolio: {
-    list: (artistId: string) => `/api/portfolio/${artistId}`,
     uploadValidated: () => '/api/portfolio/upload-validado',
+  },
+  feed: {
+    list: () => '/api/feed',
+  },
+  search: {
+    query: (q?: string) => (q ? `/api/search?q=${encodeURIComponent(q)}` : '/api/search'),
+  },
+  home: {
+    feed: () => '/api/feed',
+    search: (q?: string) => (q ? `/api/search?q=${encodeURIComponent(q)}` : '/api/search'),
+    nearby: (lat?: number, lng?: number) =>
+      lat !== undefined && lng !== undefined
+        ? `/api/artistas/nearby?lat=${lat}&lng=${lng}`
+        : '/api/artistas/nearby',
   },
   bookings: {
     create: () => '/api/agendamentos',
     list: () => '/api/agendamentos',
   },
   ai: {
-    generate: () => '/api/ai/generate',
+    /** Consome o Gemini Flash no Next.js BFF (POST /api/chat). */
+    chat: () => '/api/chat',
+    generate: () => '/api/chat',
   },
   kyc: {
     submit: () => '/api/kyc',
@@ -153,8 +176,10 @@ export const endpoints = {
     liveness: () => '/api/kyc/liveness',
   },
   chat: {
-    threads: () => '/api/chat/threads',
-    messages: (threadId: string) => `/api/chat/threads/${threadId}/messages`,
+    conversas: () => '/api/chat/conversas',
+    historico: (conversaId?: string) =>
+      conversaId ? `/api/chat/historico?conversaId=${encodeURIComponent(conversaId)}` : '/api/chat/historico',
+    enviar: () => '/api/chat/enviar',
   },
   studios: {
     validateCnpj: () => '/api/studios/validate-cnpj',
@@ -164,4 +189,30 @@ export const endpoints = {
     /** Studio address/coordinates, carrying the `isMockedLocation` fraud flag. */
     location: () => '/api/studios/location',
   },
+  media: {
+    /**
+     * Endpoint de mídia do BFF que retorna HTTP 302 Redirect para Cloudflare R2.
+     * O expo-image segue o redirecionamento 302 automaticamente.
+     */
+    get: (keyOrId: string) => `/api/media/${encodeURIComponent(keyOrId)}`,
+  },
 } as const;
+
+/**
+ * Garante que URLs de mídia relativas do BFF/Backend sejam resolvidas com a URL base da API
+ * para que o `expo-image` execute a requisição HTTP e siga os redirects 302 automaticamente
+ * até as URLs pré-assinadas da Cloudflare R2.
+ */
+export function resolveMediaUrl(pathOrUrl: string): string {
+  if (!pathOrUrl) return '';
+  if (
+    pathOrUrl.startsWith('http://') ||
+    pathOrUrl.startsWith('https://') ||
+    pathOrUrl.startsWith('file://') ||
+    pathOrUrl.startsWith('data:')
+  ) {
+    return pathOrUrl;
+  }
+  const cleanPath = pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`;
+  return `${API_BASE_URL}${cleanPath}`;
+}
