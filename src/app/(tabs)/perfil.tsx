@@ -163,7 +163,7 @@ function PerfilAuthenticated() {
         {currentRole === 'cliente' && (
           <Button
             label="Seja um Tatuador ou Estúdio"
-            variant="outline"
+            variant="secondary"
             onPress={() => router.push('/seja-tatuador')}
           />
         )}

@@ -148,7 +148,7 @@ export default function AiStudioScreen() {
                 />
                 <Button
                   label="Criar outra sugestão"
-                  variant="outline"
+                  variant="secondary"
                   onPress={handleReset}
                 />
               </View>
@@ -168,7 +168,7 @@ export default function AiStudioScreen() {
 
                 {error ? (
                   <View className="mt-2 w-full flex-row items-center gap-2 rounded-xl border border-error/40 bg-error/10 p-3">
-                    <Ionicons name="alert-circle" size={18} color={colors.error} />
+                    <Ionicons name="alert-circle" size={18} color={colors.danger} />
                     <AppText variant="muted" className="flex-1 text-xs text-error">
                       {error}
                     </AppText>
