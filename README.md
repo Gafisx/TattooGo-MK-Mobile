@@ -4,8 +4,7 @@
 </div>
 
 <div align="center">
-  <img src="./assets/app-avatar.png" alt="TattooGo MK App Icon" width="80" style="border-radius: 20px; box-shadow: 0 8px 24px rgba(255, 102, 0, 0.2);" />
-  <br/><br/>
+  <img src="./assets/image/app-avatar.png" alt="TattooGo MK App Icon" width="70" style="border-radius: 16px; vertical-align: middle; margin-right: 12px;" />
   <img src="https://img.shields.io/badge/PLATFORM-iOS%20%7C%20Android-blueviolet?style=for-the-badge&logo=expo" alt="Platform iOS Android">
   <img src="https://img.shields.io/badge/ENGINE-Expo%20SDK%20%2F%20React%20Native-000020?style=for-the-badge&logo=react" alt="Engine Expo">
   <img src="https://img.shields.io/badge/STATUS-ACTIVE%20DEVELOPMENT-ff6600?style=for-the-badge" alt="Status Active Development">
@@ -59,46 +58,53 @@ graph TD
  * Flash Notes Interativos: Stories efêmeros com gatilhos dinâmicos de orçamento rápido e suporte a ofertas por tempo limitado.
  * Chat Especializado & Travas Operacionais: Canais dedicados ao alinhamento de projetos entre cliente e artista, protegidos por travas de tempo e moderação automatizada para conversão segura.
  * Agendamento Inteligente & Gestão de Agenda: Sincronização em tempo real de horários confirmados após validação de pagamento e notificações programadas para experiência sem atritos.
-⚖️ Compliance, Privacidade & Termos de Uso (Resumo Executivo)
+⚖️ Compliance, Privacidade & Termos de Uso
 O ecossistema TattooGo MK opera em estrita conformidade com a LGPD (Lei nº 13.709/2018) e padrões internacionais de proteção de dados.
  * Criptografia & Sigilo: Dados de geolocalização, credenciais de acesso e registros de agendamento são cifrados em trânsito e em repouso.
  * Verificação de Identidade: Validação de CPF obrigatória para perfis profissionais e prestadores, assegurando confiabilidade na rede.
  * Exclusão de Dados: Política transparente com carência de 90 dias para desativação definitiva e descarte seguro.
+<table>
+<tr>
+<td>
 <details>
 <summary><b>📄 Visualizar Termos de Uso e Política de Privacidade Completo (14 Cláusulas)</b></summary>
-1. Aceitação, Natureza e Objeto
-Os presentes Termos regulam o uso da plataforma TattooGo MK. A plataforma atua exclusivamente como intermediadora tecnológica entre clientes, artistas e estúdios independentes, não sendo parte executora do serviço físico de tatuagem.
-2. Elegibilidade e Idade Mínima
-Proibido o cadastro e uso autenticado para menores de 14 anos. Usuários entre 15 e 17 anos exigem consentimento e supervisão expressa do responsável legal, em conformidade com o Estatuto da Criança e do Adolescente (ECA).
-3. Modelo Freemium
-Visitantes podem navegar livremente pelo feed público, galeria e destaques. Interações sociais avançadas, visualização completa de perfis, chat, orçamentos e agendamentos exigem cadastro e autenticação de usuário.
-4. Governança e Padrões Elite
-Artistas e estúdios devem manter regularidade documental, profissional e sanitária. É estritamente vedada a negociação de serviços ou orçamentos fora da plataforma.
-5. Chat e Travas Operacionais
-Canais dedicados ao alinhamento técnico e formalização de orçamentos, protegidos por travas de tempo, validade de propostas e moderação contra fraudes ou desvio de transações.
-6. Agendamento e Pagamentos
-Confirmação de horários vinculada à retenção de sinal/calção e processamento seguro via gateway integrado com chaves de idempotência para evitar cobranças duplicadas.
-7. Cancelamento e Reagendamento
-Políticas claras com antecedência recomendada de 3 dias e limites operacionais de cancelamentos para preservação da agenda dos profissionais.
-8. Conduta e Moderação por IA
-Monitoramento automatizado de mensagens para coibir assédio, fraude e links externos, operando sob rigoroso dever de sigilo e finalidade exclusiva de segurança.
-9. Verificação Sanitária e Documental
-Responsabilidade exclusiva dos profissionais quanto a alvarás, biossegurança, assepsia e execução física do procedimento de tatuagem.
-10. Proteção de Dados (LGPD/GDPR)
-Tratamento restrito de dados cadastrais, geolocalização aproximada/precisa e logs para operação do marketplace, sem comercialização de informações pessoais a terceiros.
-11. Propriedade Intelectual
-Artistas mantêm direitos patrimoniais sobre suas obras, concedendo licença não exclusiva de exibição técnica estrita no âmbito do ecossistema digital.
-12. Suspensão e Exclusão
-Contas podem ser desativadas a pedido do usuário (carência de 90 dias para exclusão definitiva) ou banidas imediatamente em caso de infração grave aos termos.
-13. Segurança de Conta
-Uso obrigatório de credenciais seguras, autenticação em duas etapas/OTP e salvaguardas rigorosas contra impersonação.
-14. Disposições Gerais
-Aplicam-se as leis da República Federativa do Brasil, com foro elegível conforme a legislação de consumo aplicável.
+
+
+<p><b>1. Aceitação, Natureza e Objeto</b>
+Os presentes Termos regulam o uso da plataforma TattooGo MK. A plataforma atua exclusivamente como intermediadora tecnológica entre clientes, artistas e estúdios independentes, não sendo parte executora do serviço físico de tatuagem.</p>
+<p><b>2. Elegibilidade e Idade Mínima</b>
+Proibido o cadastro e uso autenticado para menores de 14 anos. Usuários entre 15 e 17 anos exigem consentimento e supervisão expressa do responsável legal, em conformidade com o Estatuto da Criança e do Adolescente (ECA).</p>
+<p><b>3. Modelo Freemium</b>
+Visitantes podem navegar livremente pelo feed público, galeria e destaques. Interações sociais avançadas, visualização completa de perfis, chat, orçamentos e agendamentos exigem cadastro e autenticação de usuário.</p>
+<p><b>4. Governança e Padrões Elite</b>
+Artistas e estúdios devem manter regularidade documental, profissional e sanitária. É estritamente vedada a negociação de serviços ou orçamentos fora da plataforma.</p>
+<p><b>5. Chat e Travas Operacionais</b>
+Canais dedicados ao alinhamento técnico e formalização de orçamentos, protegidos por travas de tempo, validade de propostas e moderação contra fraudes ou desvio de transações.</p>
+<p><b>6. Agendamento e Pagamentos</b>
+Confirmação de horários vinculada à retenção de sinal/calção e processamento seguro via gateway integrado com chaves de idempotência para evitar cobranças duplicadas.</p>
+<p><b>7. Cancelamento e Reagendamento</b>
+Políticas claras com antecedência recomendada de 3 dias e limites operacionais de cancelamentos para preservação da agenda dos profissionais.</p>
+<p><b>8. Conduta e Moderação por IA</b>
+Monitoramento automatizado de mensagens para coibir assédio, fraude e links externos, operando sob rigoroso dever de sigilo e finalidade exclusiva de segurança.</p>
+<p><b>9. Verificação Sanitária e Documental</b>
+Responsabilidade exclusiva dos profissionais quanto a alvarás, biossegurança, assepsia e execução física do procedimento de tatuagem.</p>
+<p><b>10. Proteção de Dados (LGPD/GDPR)</b>
+Tratamento restrito de dados cadastrais, geolocalização aproximada/precisa e logs para operação do marketplace, sem comercialização de informações pessoais a terceiros.</p>
+<p><b>11. Propriedade Intelectual</b>
+Artistas mantêm direitos patrimoniais sobre suas obras, concedendo licença não exclusiva de exibição técnica estrita no âmbito do ecossistema digital.</p>
+<p><b>12. Suspensão e Exclusão</b>
+Contas podem ser desativadas a pedido do usuário (carência de 90 dias para exclusão definitiva) ou banidas imediatamente em caso de infração grave aos termos.</p>
+<p><b>13. Segurança de Conta</b>
+Uso obrigatório de credenciais seguras, autenticação em duas etapas/OTP e salvaguardas rigorosas contra impersonação.</p>
+<p><b>14. Disposições Gerais</b>
+Aplicam-se as leis da República Federativa do Brasil, com foro elegível conforme a legislação de consumo aplicável.</p>
 </details>
+</td>
+</tr>
+</table>
 > Status de Release (Q4/2026): Aplicação mobile em ciclo ativo de homologação de interface e refinamento de módulos nativos.
 > 
 <div align="center">
 <sub>© 2026 Gafisx & TattooGo MK. Todos os direitos reservados. Propriedade Intelectual Protegida.</sub>
 </div>
-
 
