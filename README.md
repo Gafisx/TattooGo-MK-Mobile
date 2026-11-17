@@ -19,9 +19,18 @@
 
   <br/>
 
-  <a href="#"><img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store" height="42"></a>
-  &nbsp;&nbsp;
-  <a href="#"><img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Google Play" height="42"></a>
+  <table align="center">
+    <tr>
+      <td align="center" style="background-color:#111111; border:1px solid #FF6600; border-radius:14px; padding:10px 18px;">
+        <a href="#"><img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" height="40"></a>
+      </td>
+      <td width="18" style="border:none; background:transparent;"></td>
+      <td align="center" style="background-color:#111111; border:1px solid #FF6600; border-radius:14px; padding:10px 18px;">
+        <a href="#"><img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" height="40"></a>
+      </td>
+    </tr>
+  </table>
+  <p align="center"><sub>Private Beta / Q4 Release</sub></p>
 </div>
 
 <!-- Badges Tech Stack Mobile Oficiais -->
@@ -57,9 +66,9 @@ O **TattooGo MK Mobile** é a aplicação cliente e profissional desenvolvida em
 
 ```mermaid
 graph TD
-    A["TattooGo Mobile Client / Expo"] -->|HTTPS / Edge Routing| B["Cloudflare & API Gateway"]
-    B -->|Clerk Auth / Token Validation| C["Upstash Redis / Edge Cache"]
-    C -->|Private Core Engine| D["Neon DB / PostgreSQL"]
+    A[TattooGo Mobile Client] -->|HTTPS / Edge| B[Cloudflare Gateway]
+    B -->|Clerk Auth Validation| C[Upstash Redis Cache]
+    C -->|Private Core Engine| D[(Neon DB PostgreSQL)]
 
     style A fill:#121212,stroke:#FF6600,stroke-width:2px,color:#fff
     style B fill:#121212,stroke:#F38020,stroke-width:2px,color:#fff
