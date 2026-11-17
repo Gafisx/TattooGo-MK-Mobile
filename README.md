@@ -64,7 +64,7 @@ O **TattooGo MK Mobile** é a aplicação cliente e profissional desenvolvida em
 
 ## Topologia de Infraestrutura & Fluxo
 
-![TattooGo MK - Infrastructure Architecture](./assets/tattoogo-infrastructure-architecture.png)
+![TattooGo MK - Infrastructure Architecture](./assets/images/tattoogo-infrastructure-architecture.png)
 ---
 
 ## Modulos & Experiencia Mobile
