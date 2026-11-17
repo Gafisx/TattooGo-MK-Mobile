@@ -62,32 +62,9 @@ O **TattooGo MK Mobile** é a aplicação cliente e profissional desenvolvida em
 
 ---
 
-
 ## Topologia de Infraestrutura & Fluxo
 
-```mermaid
-flowchart TD
-    A["TattooGo Mobile Client"]
-    B["Cloudflare Gateway"]
-    C["Clerk Auth Validation"]
-    D["Upstash Redis Cache"]
-    E["Private Core Engine"]
-    F[("Neon DB PostgreSQL")]
-
-    A -->|"HTTPS / TLS"| B
-    B -->|"Authentication Request"| C
-    C -->|"Validated Session"| D
-    D -->|"Authorized Request"| E
-    E -->|"Database Connection"| F
-
-    style A fill:#121212,stroke:#FF6600,stroke-width:2px,color:#ffffff
-    style B fill:#121212,stroke:#F38020,stroke-width:2px,color:#ffffff
-    style C fill:#121212,stroke:#00E9A3,stroke-width:2px,color:#ffffff
-    style D fill:#121212,stroke:#00E599,stroke-width:2px,color:#ffffff
-    style E fill:#121212,stroke:#00E9A3,stroke-width:2px,color:#ffffff
-    style F fill:#121212,stroke:#00E599,stroke-width:2px,color:#ffffff
-```
-
+![TattooGo MK - Infrastructure Architecture](./assets/tattoogo-infrastructure-architecture.png)
 ---
 
 ## Modulos & Experiencia Mobile
