@@ -45,17 +45,12 @@ function CoordinateRow({ label, value }: { label: string; value: string }) {
 }
 
 /**
- * Studio address / coordinates with Fake GPS defence.
+ * Endereço e geolocalização do estúdio com defesa anti-fraude (Fake GPS).
  *
- * The fix is requested live via `getCurrentPositionAsync()`. When the OS reports
- * `mocked === true` (Android mock providers, Fake GPS apps) the flow is blocked
- * immediately:
- *  - the coordinates are dropped and never forwarded to Leaflet/Mapbox;
- *  - an alert tells the user to disable the Fake GPS app;
- *  - `isMockedLocation: true` is reported to the backend as a fraud signal.
- *
- * iOS does not expose a mock flag, so detection is Android-only; the flag simply
- * stays `false` there and the server-side checks remain the backstop.
+ * Tratamento gracioso:
+ * - Caso permissões ou GPS estejam desativados, informa o usuário sem quebrar o fluxo.
+ * - Caso detectado spoofing (`mocked === true`), envia o sinal anti-fraude `isMockedLocation: true`
+ *   ao endpoint de auditoria e impede o registro de coordenadas falsas.
  */
 export default function EstudioEnderecoScreen() {
   const [permission, requestPermission] = Location.useForegroundPermissions();
@@ -75,21 +70,56 @@ export default function EstudioEnderecoScreen() {
       if (!permission?.granted) {
         const requested = await requestPermission();
         if (!requested.granted) {
-          setError('Permissão de localização negada. Não é possível validar o endereço.');
+          setError(
+            'Permissão de localização negada. Conceda acesso nas definições do aparelho para capturar as coordenadas.',
+          );
+          void triggerHaptic('warning');
           return;
         }
       }
 
-      const enabled = await Location.hasServicesEnabledAsync();
-      if (!enabled) {
-        setError('Ative os serviços de localização do dispositivo.');
+      let position: {
+        coords: { latitude: number; longitude: number; accuracy?: number | null };
+        mocked?: boolean;
+      } | null = null;
+      let servicesEnabled = false;
+
+      try {
+        servicesEnabled = await Location.hasServicesEnabledAsync();
+      } catch (checkErr) {
+        console.warn('[estudio-endereco] falha ao checar status dos serviços de localização:', checkErr);
+      }
+
+      if (!servicesEnabled) {
+        setError(
+          'Os serviços de localização (GPS) estão desativados. Ative a localização do dispositivo para definir as coordenadas exatas do estúdio.',
+        );
+        void triggerHaptic('warning');
+        return;
+      }
+
+      try {
+        position = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+      } catch (posErr) {
+        console.warn('[estudio-endereco] erro ao obter posição GPS atual:', posErr);
+        setError(
+          'Não foi possível obter a posição GPS no momento. Verifique se o GPS está ativo e tente novamente.',
+        );
+        void triggerHaptic('error');
+        return;
+      }
+
+      if (!position) {
+        setError(
+          'Não foi possível obter a posição GPS no momento. Verifique se o GPS está ativo e tente novamente.',
+        );
+        void triggerHaptic('error');
         return;
       }
 
       void triggerHaptic('light');
-      const position = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      });
 
       const isMockedLocation = position.mocked === true;
       const coords: DetectedLocation = {
@@ -100,15 +130,15 @@ export default function EstudioEnderecoScreen() {
       };
 
       if (isMockedLocation) {
-        // Block first: never surface simulated coordinates to the map provider.
-        setDetected({ ...coords, isMockedLocation: true });
+        // Bloqueia exibição oficial e notifica endpoint de auditoria
+        setDetected(coords);
         setError('Localização simulada detectada. Desative aplicativos de Fake GPS.');
         void triggerHaptic('error');
-        // Silent fraud signal to the backend (fire-and-forget, never throws).
+        // Sinal silencioso de fraude enviado ao endpoint oficial do estúdio
         void reportMockedLocation(coords);
         Alert.alert(
           'Localização simulada detectada',
-          'Desative aplicativos de Fake GPS e tente novamente. O envio das coordenadas foi bloqueado.',
+          'Desative aplicativos de Fake GPS e tente novamente. O envio de coordenadas simuladas é bloqueado pela plataforma.',
         );
         return;
       }
@@ -117,7 +147,7 @@ export default function EstudioEnderecoScreen() {
       void triggerHaptic('success');
     } catch (err) {
       console.warn('[estudio-endereco] falha ao obter localização:', err);
-      setError('Não foi possível obter a localização. Tente novamente.');
+      setError('Não foi possível obter a localização. Verifique as permissões e tente novamente.');
       void triggerHaptic('error');
     }
   }, [permission, requestPermission, saving, triggerHaptic]);

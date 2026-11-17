@@ -9,7 +9,62 @@ import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { colors } from '@/constants/theme';
 import { useHapticFeedback } from '@/hooks/use-haptic-feedback';
-import { LIVENESS_DURATION_MS, submitLivenessEvidence } from '@/lib/services/kyc-liveness';
+import { api, ApiError } from '@/lib/api';
+import { LIVENESS_DURATION_MS } from '@/lib/services/kyc-liveness';
+
+interface PresignUploadResponse {
+  uploadUrl?: string;
+  presignedUrl?: string;
+  url?: string;
+  fileKey?: string;
+  key?: string;
+}
+
+/**
+ * Upload seguro direto para o bucket Cloudflare R2 usando URL pré-assinada gerada pelo BFF.
+ */
+async function uploadKycFileToR2(
+  localUri: string,
+  defaultFileName: string,
+  contentType: string,
+): Promise<string> {
+  const fileResponse = await fetch(localUri);
+  const blob = await fileResponse.blob();
+  const fileName = localUri.split('/').pop() || defaultFileName;
+  const fileSize = blob.size;
+
+  const presignData = await api.post<PresignUploadResponse>('/api/upload/presign', {
+    context: 'kyc',
+    fileName,
+    contentType,
+    fileSize,
+  });
+
+  const uploadUrl = presignData.uploadUrl || presignData.presignedUrl || presignData.url;
+  const fileKey = presignData.fileKey || presignData.key || fileName;
+
+  if (!uploadUrl) {
+    throw new ApiError('Falha ao obter URL pré-assinada do R2 para KYC.', 500, presignData);
+  }
+
+  const putResponse = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': contentType,
+    },
+    body: blob,
+  });
+
+  if (!putResponse.ok) {
+    throw new ApiError(
+      `Falha no upload direto para R2: HTTP ${putResponse.status}`,
+      putResponse.status,
+      null,
+    );
+  }
+
+  return fileKey;
+}
 
 type Step = 'video' | 'photo' | 'review' | 'done';
 type Busy = 'idle' | 'recording' | 'capturing' | 'submitting';
@@ -39,15 +94,15 @@ function LiveOnlyBadge() {
 }
 
 /**
- * KYC active-liveness capture.
+ * KYC active-liveness capture via Cloudflare R2 Presigned URLs.
  *
- * Two live captures are mandatory (no gallery, no upload):
- *  1. `video`  — a 3-second front-camera recording (approach / turn the head).
- *  2. `photo`  — a live selfie taken from the same preview.
+ * Duas capturas obrigatórias exclusivamente via câmera nativa:
+ *  1. `video` — gravação frontal de 3s (aproximar e mover rosto).
+ *  2. `photo` — selfie ao vivo capturada diretamente do preview.
  *
- * Both files are streamed to `POST /api/kyc/liveness`, where a server-side
- * liveness service validates the proof. On success the user lands on
- * `/kyc-pendente` (analysis in progress).
+ * Ambas são enviadas diretamente ao bucket R2 via upload PUT pré-assinado
+ * (`POST /api/upload/presign`), seguido pela validação atestada em
+ * `POST /api/kyc/verify` (ou `/api/kyc/validate-document`).
  */
 export default function KycVerificacaoScreen() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -138,17 +193,55 @@ export default function KycVerificacaoScreen() {
     setBusy('submitting');
     void triggerHaptic('light');
     try {
-      await submitLivenessEvidence({
+      // 1. Upload do vídeo de liveness para R2 via Presigned URL
+      const videoKey = await uploadKycFileToR2(
         videoUri,
+        `liveness-${Date.now()}.mp4`,
+        'video/mp4',
+      );
+
+      // 2. Upload da selfie ao vivo para R2 via Presigned URL
+      const photoKey = await uploadKycFileToR2(
         photoUri,
+        `selfie-${Date.now()}.jpg`,
+        'image/jpeg',
+      );
+
+      // 3. Disparar validação / verificação de documentos e biometria facial
+      const verifyPayload = {
+        fileKey: photoKey,
+        photoFileKey: photoKey,
+        videoFileKey: videoKey,
         durationMs: LIVENESS_DURATION_MS,
         capturedAt: new Date().toISOString(),
-      });
+        metadata: {
+          platform: Platform.OS,
+          durationMs: LIVENESS_DURATION_MS,
+          capturedAt: new Date().toISOString(),
+          isLiveCapture: true,
+        },
+      };
+
+      try {
+        await api.post('/api/kyc/verify', verifyPayload, { attest: true });
+      } catch (verifyErr) {
+        if (verifyErr instanceof ApiError && verifyErr.status === 404) {
+          // Endpoint alternativo do contrato Next.js BFF
+          await api.post('/api/kyc/validate-document', verifyPayload, { attest: true });
+        } else {
+          throw verifyErr;
+        }
+      }
+
       setStep('done');
       void triggerHaptic('success');
     } catch (err) {
-      console.warn('[kyc-verificacao] falha ao enviar prova de vida:', err);
-      setError('Não foi possível enviar a verificação. Verifique a ligação e tente novamente.');
+      console.warn('[kyc-verificacao] falha ao enviar prova de vida via R2:', err);
+      const message =
+        err instanceof ApiError && typeof err.body === 'object' && err.body && 'erro' in err.body
+          ? String((err.body as { erro: unknown }).erro)
+          : 'Não foi possível enviar a verificação. Verifique a ligação e tente novamente.';
+      setError(message);
       void triggerHaptic('error');
     } finally {
       setBusy('idle');
